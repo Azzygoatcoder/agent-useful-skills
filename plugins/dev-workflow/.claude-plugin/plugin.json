@@ -1,0 +1,13 @@
+{
+  "name": "dev-workflow",
+  "description": "Git 协作与发布工作流 — 提 PR、发版本",
+  "version": "1.0.0",
+  "author": {
+    "name": "Azzygoatcoder"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/Azzygoatcoder/claude-useful-skills",
+  "homepage": "https://github.com/Azzygoatcoder/claude-useful-skills#readme",
+  "bugs": "https://github.com/Azzygoatcoder/claude-useful-skills/issues",
+  "keywords": ["git", "pull-request", "release", "github", "collaboration", "workflow"]
+}
