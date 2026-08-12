@@ -1,6 +1,6 @@
 # Dev Workflow
 
-Git 协作与发布技能集合：提 PR、发版本。
+Git 协作与发布技能集合：提 PR、发版本、issue、code review。
 
 ## Skills
 
@@ -18,6 +18,8 @@ Git 协作与发布技能集合：提 PR、发版本。
 - origin = 权威仓库 → Owner / Maintainer → 直推（release 走 A，pr 不需要）
 - origin = 你的 fork → Contributor → fork-PR（release 走 B，pr 必须）
 
-## 后续方向
+<p align="center"><img src="assets/push-access-flowchart.png" width="560" alt="push 权限判定"/></p>
 
-GitHub 协作流不止 PR 和 release，issue（创建/分诊/关闭）、code review 等同类流程可继续按「角色判据」补齐。
+## 协作流全景
+
+PR / release / issue / review 四个协作流已覆盖。剩余：GitHub Discussion（无专用 gh 命令）、CI 自动化（release 后自动跑测试）暂缓。
