@@ -1,0 +1,68 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="verification-loop" name="Verification Loop">
+    <mxGraphModel dx="760" dy="340" grid="1" gridSize="4" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="760" pageHeight="340" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Node 1: LLM Drafts Artifacts (External/Cloud) -->
+        <mxCell id="n1" value="&lt;b&gt;LLM Drafts Artifacts&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;gpt-image-2 · Qwen · DeepSeek&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#94a3b8;fontColor=#334155;fontSize=13;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="200" height="96" as="geometry"/>
+        </mxCell>
+
+        <!-- Node 2: Scripts Fix Format (Backend/Step) -->
+        <mxCell id="n2" value="&lt;b&gt;Scripts Fix Format&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;llm.py · office_tools · latex_build&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#334155;fontColor=#334155;fontSize=13;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="280" y="60" width="200" height="96" as="geometry"/>
+        </mxCell>
+
+        <!-- Node 3: Cross-Model Verification (Focal) -->
+        <mxCell id="n3" value="&lt;b&gt;Cross-Model Verification&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;vision · review · consistency&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#2563eb;fontColor=#1e3a8a;fontSize=13;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="520" y="60" width="200" height="96" as="geometry"/>
+        </mxCell>
+
+        <!-- Edge 1: n1 -> n2 -->
+        <mxCell id="e1" style="endArrow=block;strokeColor=#64748b;strokeWidth=2;html=1;" edge="1" parent="1" source="n1" target="n2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Edge 2: n2 -> n3 -->
+        <mxCell id="e2" style="endArrow=block;strokeColor=#64748b;strokeWidth=2;html=1;" edge="1" parent="1" source="n2" target="n3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Edge 3: n3 -> n1 feedback (dashed, accent) -->
+        <mxCell id="e3" value="&lt;font style=&quot;font-size:11px&quot;&gt;reject → revise&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;dashed=1;strokeColor=#2563eb;strokeWidth=2;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="n3" target="n1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="620" y="208"/>
+              <mxPoint x="140" y="208"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Legend: solid = data flow -->
+        <mxCell id="lg1" value="" style="endArrow=block;strokeColor=#64748b;strokeWidth=2;html=1;" edge="1" parent="1">
+          <mxGeometry width="50" relative="1" as="geometry">
+            <mxPoint x="40" y="256" as="sourcePoint"/>
+            <mxPoint x="80" y="256" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg1t" value="&lt;font style=&quot;font-size:11px&quot;&gt;data flow&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;fontColor=#64748b;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="88" y="244" width="120" height="24" as="geometry"/>
+        </mxCell>
+
+        <!-- Legend: dashed = feedback -->
+        <mxCell id="lg2" value="" style="endArrow=block;dashed=1;strokeColor=#2563eb;strokeWidth=2;html=1;" edge="1" parent="1">
+          <mxGeometry width="50" relative="1" as="geometry">
+            <mxPoint x="40" y="288" as="sourcePoint"/>
+            <mxPoint x="80" y="288" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lg2t" value="&lt;font style=&quot;font-size:11px&quot;&gt;feedback / revise&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;fontColor=#64748b;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="88" y="276" width="140" height="24" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

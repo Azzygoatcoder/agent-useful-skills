@@ -1,0 +1,48 @@
+<mxfile host="app.diagrams.net">
+  <diagram id="paper-pipeline" name="Paper Pipeline">
+    <mxGraphModel dx="800" dy="260" grid="1" gridSize="4" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="800" pageHeight="260" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <mxCell id="n1" value="&lt;b&gt;Read Papers&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;paper-reading&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#334155;fontColor=#334155;fontSize=13;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="160" height="88" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="n2" value="&lt;b&gt;Draw Figures&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;figure-drawing&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#334155;fontColor=#334155;fontSize=13;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="232" y="60" width="160" height="88" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="n3" value="&lt;b&gt;Write&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;paper-writing&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#334155;fontColor=#334155;fontSize=13;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="424" y="60" width="160" height="88" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="n4" value="&lt;b&gt;Review&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;review.py&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dbeafe;strokeColor=#2563eb;fontColor=#1e3a8a;fontSize=13;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="616" y="60" width="160" height="88" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e1" style="endArrow=block;strokeColor=#64748b;strokeWidth=2;html=1;" edge="1" parent="1" source="n1" target="n2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e2" style="endArrow=block;strokeColor=#64748b;strokeWidth=2;html=1;" edge="1" parent="1" source="n2" target="n3">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e3" style="endArrow=block;strokeColor=#64748b;strokeWidth=2;html=1;" edge="1" parent="1" source="n3" target="n4">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e4" value="&lt;font style=&quot;font-size:11px&quot;&gt;revise&lt;/font&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;endArrow=block;dashed=1;strokeColor=#2563eb;strokeWidth=2;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="n4" target="n3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="696" y="196"/>
+              <mxPoint x="504" y="196"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

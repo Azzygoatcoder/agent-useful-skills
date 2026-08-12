@@ -6,12 +6,9 @@
 
 > 全貌索引（模块→skill→脚本→验证方式）：见 [skeleton.md](skeleton.md)。
 
-```mermaid
-flowchart LR
-    G["LLM 写中间产物<br>gpt-image-2 / Qwen / DeepSeek"] --> S["脚本固化格式<br>llm.py / office_tools / latex_build"]
-    S --> V["跨模型验证环<br>vision 渲染 / review 对抗 / consistency 一致性"]
-    V -.->|不达标则修订| G
-```
+<p align="center">
+  <img src="assets/verification-loop.png" width="600" alt="Verification Loop"/>
+</p>
 
 ## 设计原则（为什么这么设计）
 

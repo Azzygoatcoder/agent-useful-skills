@@ -230,11 +230,12 @@ save_fig(fig, "result", data=df)             # pdf矢量 + png300dpi + csv 数�
 | 2026-08-11 | 吸收 diagram-design（5.4k⭐） | 编辑级别设计系统进 draw.io 自查：反 AI-slop 清单（禁阴影/对角连线/圆角>10px/强调>2处/图例漂移）+ 节点语义→填色描边表 + 连接线硬规则（正交直角 r=8/标签遮罩 6-10px/连接点沿边≥12px 展开/穿盒虚线例外）+ 4px 网格 + 复杂度预算≤9节点。**场景 B 对外结构化图 → diagram-design skill 补位**（sequence/state/ER/loop/radar，SVG 直进 LaTeX） |
 | 2026-08-12 | 数据图模块落地 | **D 数据图场景**：数据→代码→渲染（AI 不能画数据图，值必须来自数据）；`bin/data_plot.py`（期刊样式 pub_style + 数据耦合 save_fig + demo 实测通过）；vision 渲染检查循环（图例/截断/溢出/配色）；投稿前升 PGFPlots 接 LaTeX。MatPlotAgent 模式参照 |
 | 2026-08-12 | fireworks-tech-graph 集成 | **技术/Agent 架构图补位**：语义形状（LLM 双边框/Agent 六边形/向量库环柱）+ 14 类 + 有界验证环（SVG 结构校验→PNG 视觉回读→定向修订≤2轮）。实测 CareRuler 培训 agent 架构图 vision 全过。**工具不堆积原则**：每个工具一个明确生态位，新东西吸收提取、重复轮子不安装 |
+| 2026-08-13 | 开源 repo 配图 dogfooding（claude-useful-skills） | **README/文档图是场景 B 之外的缺口**（对外但非论文、术语英文受众可中文）：结构化图仍走直绘 + 编辑设计系统，标签英文（术语保留英文）。**导出走 drawio MCP**（start_session→load_diagram→export_diagram 出 PNG），本机 draw.io CLI 未装；`.drawio` 入库作可编辑源 + `.png` 引用。实测 2 张图（验证环 9.5 / 论文一条龙 9/10）vision 全过 |
 
 ## 工具
 
 - 生图：`generate_image` MCP（OpenAI 兼容，provider 由 env 配置）
 - 读图：`vision.py`（Qwen3-VL-32B，SiliconFlow）
-- 导出：`draw.io --export --format png <in.drawio>`（安装路径因机器而异）
+- 导出：drawio MCP（`start_session` → `load_diagram` → `export_diagram` 出 PNG）；draw.io CLI（`draw.io --export --format png`，本机未装，以 MCP 为准）
 - 评审：`review.py`（可选）
 - 数据图：`bin/data_plot.py`（pandas/matplotlib 期刊样式 + 数据耦合保存 + 演示）
