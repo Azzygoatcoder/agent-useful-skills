@@ -20,13 +20,15 @@ MAX_INPUT_CHARS = int(os.getenv("MAX_INPUT_CHARS", "120000"))
 
 
 def get_key():
-    """优先环境变量；兜底 ~/.claude/settings.json（Claude Code 本地设置，不入库）。"""
-    key = os.getenv("SILICONFLOW_API_KEY")
+    """按端点选 key：SenseNova 端点用 SENSENOVA_API_KEY，否则 SILICONFLOW_API_KEY。
+    优先环境变量；兜底 ~/.claude/settings.json（Claude Code 本地设置，不入库）。"""
+    key_env = "SENSENOVA_API_KEY" if "sensenova" in api_url().lower() else "SILICONFLOW_API_KEY"
+    key = os.getenv(key_env)
     if key:
         return key
     try:
         s = json.load(open(os.path.expanduser('~/.claude/settings.json'), encoding='utf-8'))
-        return s['env'].get('SILICONFLOW_API_KEY', '')
+        return s['env'].get(key_env, '')
     except Exception:
         return ''
 
