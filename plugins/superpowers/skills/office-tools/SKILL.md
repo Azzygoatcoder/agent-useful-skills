@@ -22,15 +22,15 @@ description: Use when 需要处理 WPS/Office/PDF 文件——"Excel 数据处�
 ## 写作：markdown → Word/PPT（pandoc）
 
 ```
-python bin/office_tools.py md2docx 笔记.md 报告.docx [--toc] [--reference-doc bin/templates/reference.docx]
-python bin/office_tools.py md2pptx 讲稿.md 汇报.pptx [--slide-level 2] [--reference-doc 模板.pptx]
+office-tools md2docx 笔记.md 报告.docx [--toc] [--reference-doc bin/templates/reference.docx]
+office-tools md2pptx 讲稿.md 汇报.pptx [--slide-level 2] [--reference-doc 模板.pptx]
 ```
 
 - **LLM 写 markdown（天然输出）→ pandoc 转 Office**，薄封装在 office_tools（pandoc 全部能力自然继承：公式/引用/双栏/备注）
 - **LaTeX 公式($..$) → Word/PPT 原生 OMML 方程**（可编辑，实测 docx+pptx 都出）；这是选 pandoc 而非其他路线的关键
 - **中文字体**：docx 用 `--reference-doc bin/templates/reference.docx`（已预设宋体正文/黑体标题/1.5倍距/首行缩进2字符）
 - **pptx 结构**：`#`=分节标题页、`##`=一页，输出原生文本框（可编辑，非图片）；公式同样 OMML
-- 重新生成默认模板：`pandoc -o reference.docx --print-default-data-file reference.docx` → `python bin/style_reference_docx.py`；模板可在 WPS/Word 手动微调后保存即生效
+- 重新生成默认模板：`pandoc -o reference.docx --print-default-data-file reference.docx` → `style-reference-docx`；模板可在 WPS/Word 手动微调后保存即生效
 
 ## 关键能力：看图（模型无视觉，靠 vision 代理）
 
@@ -71,19 +71,19 @@ classify 图/                              # vision 层：幸存图分类 价值
 ## 命令速查
 
 ```
-python bin/office_tools.py read data.xlsx [--sheet 表1] [--head 10]
-python bin/office_tools.py md2xlsx 笔记.md out.xlsx [--table all|0,1]
-python bin/office_tools.py xlsx2md data.xlsx [--sheet 表1]
-python bin/office_tools.py stats data.xlsx [--col 列名,列名]
-python bin/office_tools.py csv2xlsx data.csv out.xlsx
-python bin/office_tools.py extract pdf 论文.pdf --outdir 图/ [--pages 1,3]
-python bin/office_tools.py extract docx 报告.docx --outdir 图/
-python bin/office_tools.py extract pptx 汇报.pptx --outdir 图/
-python bin/office_tools.py md2docx 笔记.md 报告.docx [--toc] [--reference-doc 模板.docx]
-python bin/office_tools.py md2pptx 讲稿.md 汇报.pptx [--slide-level 2] [--reference-doc 模板.pptx]
+office-tools read data.xlsx [--sheet 表1] [--head 10]
+office-tools md2xlsx 笔记.md out.xlsx [--table all|0,1]
+office-tools xlsx2md data.xlsx [--sheet 表1]
+office-tools stats data.xlsx [--col 列名,列名]
+office-tools csv2xlsx data.csv out.xlsx
+office-tools extract pdf 论文.pdf --outdir 图/ [--pages 1,3]
+office-tools extract docx 报告.docx --outdir 图/
+office-tools extract pptx 汇报.pptx --outdir 图/
+office-tools md2docx 笔记.md 报告.docx [--toc] [--reference-doc 模板.docx]
+office-tools md2pptx 讲稿.md 汇报.pptx [--slide-level 2] [--reference-doc 模板.pptx]
 ```
 
-脚本在 `bin/office_tools.py`（skills repo，junction 已建）。依赖：openpyxl、pymupdf、python-docx、python-pptx、**pandoc（写作）**。
+脚本 `office-tools`（`pip install -e .` 后为 console 命令；也可 `python bin/office_tools.py` 直调）。依赖：openpyxl、pymupdf、python-docx、python-pptx、**pandoc（写作）**。
 
 ## 边界
 

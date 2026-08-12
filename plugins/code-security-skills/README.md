@@ -78,11 +78,11 @@ Phase 2 加 review.py（ARIS 对抗范式，不同模型）攻击 findings——
 不再手动 grep/Edit 注解，状态管理脚本化（对齐 arxiv_fetch/latex_build 模式）：
 
 ```bash
-python bin/security-audit-tools.py list [--status open] [--severity high]
-python bin/security-audit-tools.py status
-python bin/security-audit-tools.py diff-filter --commit <上次审计hash>   # 变更文件→涉及 findings
-python bin/security-audit-tools.py mark-fixed SSRF-1 PATH-1              # 改注解行+记当前 HEAD
-python bin/security-audit-tools.py mark-deferred AUTH-1
+security-audit-tools list [--status open] [--severity high]
+security-audit-tools status
+security-audit-tools diff-filter --commit <上次审计hash>   # 变更文件→涉及 findings
+security-audit-tools mark-fixed SSRF-1 PATH-1              # 改注解行+记当前 HEAD
+security-audit-tools mark-deferred AUTH-1
 ```
 
 mark-* 直接改写 `<!-- AUDIT:STATUS=... -->` 注解行，彻底解决 Edit 工具 Unicode/空白匹配摩擦；diff-filter 让增量 re-audit 真正可跑。

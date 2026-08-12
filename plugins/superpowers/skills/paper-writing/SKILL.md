@@ -18,22 +18,22 @@ description: 论文写作一条龙——venue 定模板 → latex_build 初始�
 
 ## 场景 A 主流程（ARIS 模式，模块化写作）
 
-1. **定 venue → 模板**：`python bin/latex_build.py list`。ICML/NeurIPS 先下载当年官方 `.sty` 放模板目录（每年更新，不 vendoring）
-2. **初始化项目**：`python bin/latex_build.py new --template ieee-conf --dir 项目名`
+1. **定 venue → 模板**：`latex-build list`。ICML/NeurIPS 先下载当年官方 `.sty` 放模板目录（每年更新，不 vendoring）
+2. **初始化项目**：`latex-build new --template ieee-conf --dir 项目名`
 3. **模块化写作**（长文关键，防 context 爆）：
    - `main.tex` = venue 模板 + title/abstract + `\input{sections/...}`
    - `sections/` 每节一个文件，数字前缀排序：`00-intro.tex` `10-method.tex` `20-experiments.tex` `30-conclusion.tex`
    - 一节一子任务：写完 `\input` 组合进 main，Agent 逐节推进不整篇塞一个 context
 4. **图**：对外结构化图 → diagram-design skill（SVG 直进 LaTeX，矢量无损）；需要 draw.io 可编辑 → figure-drawing → 导出 PDF 进 `figures/`
-5. **编译**：`python bin/latex_build.py build --dir 项目名 --engine pdflatex`（latexmk 多遍，自动跑 biber）
-6. **页数检查**：`python bin/latex_build.py build --dir 项目名 --pages --main-body`（ML：References 前≤8）
-7. **评审**：`python bin/review.py ...`（ARIS 对抗评审，语义正确性）→ 修订 → 重编译
+5. **编译**：`latex-build build --dir 项目名 --engine pdflatex`（latexmk 多遍，自动跑 biber）
+6. **页数检查**：`latex-build build --dir 项目名 --pages --main-body`（ML：References 前≤8）
+7. **评审**：`review ...`（ARIS 对抗评审，语义正确性）→ 修订 → 重编译
 
 ## 其他场景
 
-- **B 学位论文**：`python bin/latex_build.py new --template sjtuthesis --dir 论文 --src <SJTUThesis-path>`；盲审版 `\documentclass[review=true]`；章节在 `contents/` 分文件
+- **B 学位论文**：`latex-build new --template sjtuthesis --dir 论文 --src <SJTUThesis-path>`；盲审版 `\documentclass[review=true]`；章节在 `contents/` 分文件
 - **C 报告**：`new --template sjtureport`；中文正文 + biblatex biber gb7714-2015 参考文献（UTF-8 中文无痛）
-- **D Office**：`python bin/office_tools.py md2docx/md2pptx`（公式→OMML 原生方程）；模板 `bin/templates/reference.docx`
+- **D Office**：`office-tools md2docx/md2pptx`（公式→OMML 原生方程）；模板 `bin/templates/reference.docx`
 
 ## 关键约定
 

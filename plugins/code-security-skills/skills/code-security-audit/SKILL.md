@@ -230,7 +230,7 @@ After receiving all three agent reports:
 4.5 **Adversarial verification（跨模型，可选但推荐）** — 单模型自审会漏掉"过度自信"。把合并后的 findings 写到临时文件，调 `review.py`（ARIS 对抗范式，不同模型）攻击它：
 
    ```bash
-   python bin/review.py /tmp/findings_draft.md "security audit findings — 哪些 fail 5 点 Self-Check？哪些 Critical/High 只有单方法检出？哪些是误报？"
+   review /tmp/findings_draft.md "security audit findings — 哪些 fail 5 点 Self-Check？哪些 Critical/High 只有单方法检出？哪些是误报？"
    ```
 
    review.py 假设 findings 有严重问题并强攻——它的 strongest_objection（单一最强拒绝理由）+ other_weaknesses（次要弱点）当复核清单逐条回查：被它批倒且无反驳依据的 finding 重新验证；它无法推翻的才保留。**这是 30-40% 误报瓶颈的自动化解法**（替代"全靠人工读代码判断"）。

@@ -126,6 +126,9 @@ latex-build list
 ```bash
 export LLM_API_URL="https://api.siliconflow.cn/v1/chat/completions"
 export SILICONFLOW_API_KEY="sk-..."
+
+# 识图后端一键切换（可选，默认 siliconflow）
+export VISION_PROVIDER="sensenova"   # 自动带出 URL + 模型 + SENSENOVA_API_KEY
 ```
 
 ## 许可证
