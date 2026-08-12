@@ -9,6 +9,7 @@ Git 协作与发布技能集合：提 PR、发版本。
 | [pr-skill](skills/pr-skill/SKILL.md) | 提 PR（fork 工作流） | 无上游 push 权限（contributor）或想走评审（maintainer） |
 | [release-skill](skills/release-skill/SKILL.md) | 发版本（tag + release） | 有 push 权限 → 直推；无 → fork-PR |
 | [issue-skill](skills/issue-skill/SKILL.md) | issue（提/分诊/处理/转 PR） | 角色无关（谁都能提）；分诊关闭是 maintainer 专属 |
+| [review-skill](skills/review-skill/SKILL.md) | PR review（看/评审/合并） | 评审者（有 merge 权限的 maintainer/owner） |
 
 ## 共用判据
 
