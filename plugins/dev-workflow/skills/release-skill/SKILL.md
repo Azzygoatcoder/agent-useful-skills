@@ -27,6 +27,7 @@ description: |
 
 - `gh` CLI 已登录；工作区干净
 - 版本号在 `pyproject.toml`（`[project] version = "X.Y.Z"`）；有包 `__init__.py` 的 `__version__` 要同步——monorepo 可能只有 pyproject、无 `__init__`，跳过即可
+- **monorepo 有插件**（`plugins/*/.claude-plugin/plugin.json`）：bump 根版本时顺带查各插件 version 是否与各自 README changelog 同步（失配例子：code-security-skills 曾 plugin.json 1.3.1 vs changelog 1.4.0），见 VERSIONING.md
 - 默认分支用 `git rev-parse --abbrev-ref HEAD` 判（master / main 皆可，别硬编码）
 
 ## 场景 A：自有仓库直推（默认）
@@ -36,7 +37,7 @@ description: |
    - Minor（X.Y+1.0）：新特性 / 无破坏重构
    - Major（X+1.0.0）：破坏性变更（0.x 少见）
    - RC 后缀（v0.2.0-rc9）：可去 RC（v0.3.0）或加 RC 号（v0.2.0-rc10）
-2. **bump**：改 `pyproject.toml`（+ 有 `__init__` 则同步）；版本已对就跳过
+2. **bump**：改 `pyproject.toml`（+ 有 `__init__` 则同步）；版本已对就跳过。monorepo 时顺带查各插件 `plugin.json` version 是否 stale（改了哪个插件的 skills 就 bump 哪个）
 3. **tag + release**：
    ```bash
    git tag -a vX.Y.Z -m "vX.Y.Z"
