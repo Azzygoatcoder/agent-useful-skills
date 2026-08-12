@@ -231,6 +231,7 @@ save_fig(fig, "result", data=df)             # pdf矢量 + png300dpi + csv 数�
 | 2026-08-12 | 数据图模块落地 | **D 数据图场景**：数据→代码→渲染（AI 不能画数据图，值必须来自数据）；`bin/data_plot.py`（期刊样式 pub_style + 数据耦合 save_fig + demo 实测通过）；vision 渲染检查循环（图例/截断/溢出/配色）；投稿前升 PGFPlots 接 LaTeX。MatPlotAgent 模式参照 |
 | 2026-08-12 | fireworks-tech-graph 集成 | **技术/Agent 架构图补位**：语义形状（LLM 双边框/Agent 六边形/向量库环柱）+ 14 类 + 有界验证环（SVG 结构校验→PNG 视觉回读→定向修订≤2轮）。实测 CareRuler 培训 agent 架构图 vision 全过。**工具不堆积原则**：每个工具一个明确生态位，新东西吸收提取、重复轮子不安装 |
 | 2026-08-13 | 开源 repo 配图 dogfooding（claude-useful-skills） | **README/文档图是场景 B 之外的缺口**（对外但非论文、术语英文受众可中文）：结构化图仍走直绘 + 编辑设计系统，标签英文（术语保留英文）。**导出走 drawio MCP**（start_session→load_diagram→export_diagram 出 PNG），本机 draw.io CLI 未装；`.drawio` 入库作可编辑源 + `.png` 引用。实测 2 张图（验证环 9.5 / 论文一条龙 9/10）vision 全过 |
+| 2026-08-13 | diagram-design dogfooding（dev-workflow push 权限 flowchart） | 3 个摩擦：①first-run style-guide gate 对无品牌项目偏重（默认 rust 色，只能 proceed-default）②4px 网格（字号整除 4）与 typography 规范（9px sublabel / 7-8px eyebrow）自相矛盾 ③flowchart 形状即语义，底置图例冗余。另：SVG 用 rsvg-convert 光栅化后字体回落但可读（vision 9/10） |
 
 ## 工具
 
