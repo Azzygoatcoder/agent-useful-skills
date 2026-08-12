@@ -3,35 +3,8 @@
 Usage: python fig2drawio.py <image_path> [--out out.mmd] [--format mermaid|drawio]
 流程: Qwen3-VL 读图结构(JSON) → Qwen3.5-397B 转 Mermaid/draw.io XML → 保存
 """
-import sys, json, os, base64, urllib.request, re
-
-sys.stdout.reconfigure(encoding='utf-8')
-
-BASE = os.getenv("LLM_API_URL", "https://api.siliconflow.cn/v1/chat/completions")
-VISION_MODEL = os.getenv("VISION_MODEL", "Qwen/Qwen3-VL-32B-Instruct")
-TEXT_MODEL = os.getenv("REVIEW_MODEL", "Qwen/Qwen3.5-397B-A17B")
-
-
-def get_key():
-    """优先环境变量；兜底 ~/.claude/settings.json（Claude Code 本地设置）。"""
-    key = os.getenv("SILICONFLOW_API_KEY")
-    if key:
-        return key
-    try:
-        s = json.load(open(os.path.expanduser('~/.claude/settings.json'), encoding='utf-8'))
-        return s['env'].get('SILICONFLOW_API_KEY', '')
-    except Exception:
-        return ''
-
-
-def call(model, messages):
-    body = {"model": model, "messages": messages, "temperature": 0.2}
-    req = urllib.request.Request(
-        BASE, data=json.dumps(body).encode(),
-        headers={"Authorization": "Bearer " + get_key(), "Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=240) as r:
-        resp = json.loads(r.read())
-    return resp["choices"][0]["message"]["content"]
+import sys, os, re
+import llm
 
 
 STRUCTURE_PROMPT = """这是一张论文图（架构/流程/示意图）。请提取结构化信息，严格只输出一个 JSON 对象，不要任何其他文字：
@@ -46,12 +19,12 @@ STRUCTURE_PROMPT = """这是一张论文图（架构/流程/示意图）。请�
 - 读不清的字符用 "?" 占位，不要编造"""
 
 
-def extract_structure(img_b64):
+def extract_structure(img_data_url):
     msg = [{"role": "user", "content": [
-        {"type": "image_url", "image_url": {"url": "data:image/png;base64," + img_b64}},
+        {"type": "image_url", "image_url": {"url": img_data_url}},
         {"type": "text", "text": STRUCTURE_PROMPT},
     ]}]
-    return call(VISION_MODEL, msg)
+    return llm.chat(llm.VISION_MODEL, msg, temperature=0.2)
 
 
 def to_mermaid(structure):
@@ -64,7 +37,7 @@ def to_mermaid(structure):
 - 文字里的特殊字符（括号/引号）要转义或用引号 `A["文字"]`
 - 只输出 ```mermaid 代码块，不要其他文字
 """
-    return call(TEXT_MODEL, [{"role": "user", "content": prompt}])
+    return llm.chat(llm.TEXT_MODEL, [{"role": "user", "content": prompt}], temperature=0.2)
 
 
 def to_drawio(structure):
@@ -76,7 +49,7 @@ def to_drawio(structure):
 - 坐标 (x,y) 从上到下/从左到右合理排布
 - 只输出 XML，不要其他文字
 """
-    return call(TEXT_MODEL, [{"role": "user", "content": prompt}])
+    return llm.chat(llm.TEXT_MODEL, [{"role": "user", "content": prompt}], temperature=0.2)
 
 
 def extract_mermaid(raw):
@@ -99,20 +72,17 @@ def main():
     if "--out" in sys.argv:
         out = sys.argv[sys.argv.index("--out") + 1]
 
-    with open(img_path, 'rb') as f:
-        img_b64 = base64.b64encode(f.read()).decode()
-
-    print(f"[1/3] vision 读图结构 ({VISION_MODEL})...")
-    structure = extract_structure(img_b64)
+    print(f"[1/3] vision 读图结构 ({llm.VISION_MODEL})...")
+    structure = extract_structure(llm.img_url(img_path))
     print("   结构 JSON:", structure[:200].replace('\n', ' '), "...")
 
     if fmt == "drawio":
-        print(f"[2/3] LLM 转 draw.io XML ({TEXT_MODEL})...")
+        print(f"[2/3] LLM 转 draw.io XML ({llm.TEXT_MODEL})...")
         result = to_drawio(structure)
         if not out.endswith('.drawio'):
             out = out.rsplit('.', 1)[0] + '.drawio'
     else:
-        print(f"[2/3] LLM 转 Mermaid ({TEXT_MODEL})...")
+        print(f"[2/3] LLM 转 Mermaid ({llm.TEXT_MODEL})...")
         result = to_mermaid(structure)
         result = extract_mermaid(result)
         if not out.endswith(('.mmd', '.mermaid')):

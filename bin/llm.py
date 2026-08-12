@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+"""llm.py — 科研骨架共享 LLM 客户端（OpenAI-compatible）。
+
+review.py / vision.py / consistency_check.py / fig2drawio.py 共用的调用层：
+统一 key 解析、端点覆盖、超时/重试，消除各脚本复制的样板。
+
+脱敏约定：
+- key 优先读环境变量，兜底 ~/.claude/settings.json（Claude Code 本地设置，不入库）
+- 端点用 LLM_API_URL 覆盖；默认 SiliconFlow（公开供应商）
+- 自定义供应商（私有端点）不写进本文件，仅通过环境变量本地注入
+"""
+import sys, json, os, base64, urllib.request, urllib.error, time
+
+sys.stdout.reconfigure(encoding='utf-8')  # 根治 GBK 崩溃
+
+DEFAULT_API_URL = "https://api.siliconflow.cn/v1/chat/completions"
+VISION_MODEL = os.getenv("VISION_MODEL", "Qwen/Qwen3-VL-32B-Instruct")
+TEXT_MODEL = os.getenv("REVIEW_MODEL", "Qwen/Qwen3.5-397B-A17B")
+
+
+def get_key():
+    """优先环境变量；兜底 ~/.claude/settings.json（Claude Code 本地设置，不入库）。"""
+    key = os.getenv("SILICONFLOW_API_KEY")
+    if key:
+        return key
+    try:
+        s = json.load(open(os.path.expanduser('~/.claude/settings.json'), encoding='utf-8'))
+        return s['env'].get('SILICONFLOW_API_KEY', '')
+    except Exception:
+        return ''
+
+
+def api_url():
+    """端点：LLM_API_URL 覆盖，默认 SiliconFlow（公开供应商）。"""
+    return os.getenv("LLM_API_URL", DEFAULT_API_URL)
+
+
+def chat(model, messages, temperature=None, timeout=240, retries=2):
+    """一次非流式对话，返回 message.content 字符串。
+
+    messages: OpenAI 格式（文本或 image_url 多模态均可）。
+    temperature: None 表示不传该字段（用模型默认值）。
+    retries: 5xx / 超时 / 网络错误自动重试次数；4xx 直接抛。
+    """
+    body = {"model": model, "messages": messages}
+    if temperature is not None:
+        body["temperature"] = temperature
+    key = get_key()
+    for attempt in range(retries + 1):
+        try:
+            req = urllib.request.Request(
+                api_url(), data=json.dumps(body).encode(),
+                headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                resp = json.loads(r.read())
+            return resp["choices"][0]["message"]["content"]
+        except urllib.error.HTTPError as e:
+            if e.code >= 500 and attempt < retries:
+                time.sleep(1.5 * (attempt + 1))
+                continue
+            raise
+        except (urllib.error.URLError, TimeoutError):
+            if attempt < retries:
+                time.sleep(1.5 * (attempt + 1))
+                continue
+            raise
+
+
+def img_url(path_or_url):
+    """图片路径 → data URL；已是 http(s):// 或 data: 则原样返回。"""
+    if path_or_url.startswith(("http://", "https://", "data:")):
+        return path_or_url
+    with open(path_or_url, 'rb') as f:
+        return "data:image/png;base64," + base64.b64encode(f.read()).decode()
+
+
+if __name__ == "__main__":
+    print(f"api_url = {api_url()}")
+    print(f"VISION_MODEL = {VISION_MODEL}")
+    print(f"TEXT_MODEL = {TEXT_MODEL}")
+    print(f"key_configured = {bool(get_key())}")

@@ -17,3 +17,7 @@ settings.local.json
 .env
 *.env
 *.key
+
+# Python
+__pycache__/
+*.pyc
