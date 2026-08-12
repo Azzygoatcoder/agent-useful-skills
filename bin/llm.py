@@ -6,7 +6,7 @@ review.py / vision.py / consistency_check.py / fig2drawio.py 共用的调用层�
 
 脱敏约定：
 - key 优先读环境变量，兜底 ~/.claude/settings.json（Claude Code 本地设置，不入库）
-- 端点用 LLM_API_URL 覆盖；默认 SiliconFlow（公开供应商）
+- 端点用 env 覆盖；默认 SiliconFlow（公开供应商）
 - 自定义供应商（私有端点）不写进本文件，仅通过环境变量本地注入
 """
 import sys, json, os, base64, urllib.request, urllib.error, time, re
@@ -14,15 +14,39 @@ import sys, json, os, base64, urllib.request, urllib.error, time, re
 sys.stdout.reconfigure(encoding='utf-8')  # 根治 GBK 崩溃
 
 DEFAULT_API_URL = "https://api.siliconflow.cn/v1/chat/completions"
-VISION_MODEL = os.getenv("VISION_MODEL", "Qwen/Qwen3-VL-32B-Instruct")
+
+# 识图供应商预设：VISION_PROVIDER 一键切换（默认 siliconflow）
+VISION_PROVIDERS = {
+    "siliconflow": ("https://api.siliconflow.cn/v1/chat/completions",
+                    "Qwen/Qwen3-VL-32B-Instruct", "SILICONFLOW_API_KEY"),
+    "sensenova": ("https://token.sensenova.cn/v1/chat/completions",
+                  "sensenova-6.7-flash-lite", "SENSENOVA_API_KEY"),
+}
+_VP = VISION_PROVIDERS.get(os.getenv("VISION_PROVIDER", "siliconflow"),
+                           VISION_PROVIDERS["siliconflow"])
+VISION_MODEL = os.getenv("VISION_MODEL", _VP[1])
+_VISION_URL = _VP[0]
+_VISION_KEY_ENV = _VP[2]
+
 TEXT_MODEL = os.getenv("REVIEW_MODEL", "Qwen/Qwen3.5-397B-A17B")
 MAX_INPUT_CHARS = int(os.getenv("MAX_INPUT_CHARS", "120000"))
 
 
-def get_key():
-    """按端点选 key：SenseNova 端点用 SENSENOVA_API_KEY，否则 SILICONFLOW_API_KEY。
-    优先环境变量；兜底 ~/.claude/settings.json（Claude Code 本地设置，不入库）。"""
-    key_env = "SENSENOVA_API_KEY" if "sensenova" in api_url().lower() else "SILICONFLOW_API_KEY"
+def api_url():
+    """文本/评审端点：LLM_API_URL 覆盖，默认 SiliconFlow。"""
+    return os.getenv("LLM_API_URL", DEFAULT_API_URL)
+
+
+def vision_url():
+    """识图端点：VISION_API_URL > LLM_API_URL > VISION_PROVIDER 预设。"""
+    return os.getenv("VISION_API_URL") or os.getenv("LLM_API_URL") or _VISION_URL
+
+
+def get_key(key_env=None):
+    """key：优先环境变量，兜底 ~/.claude/settings.json（本地，不入库）。
+    key_env 缺省时按 api_url() 端点自动选（sensenova vs siliconflow）。"""
+    if key_env is None:
+        key_env = "SENSENOVA_API_KEY" if "sensenova" in api_url().lower() else "SILICONFLOW_API_KEY"
     key = os.getenv(key_env)
     if key:
         return key
@@ -33,26 +57,23 @@ def get_key():
         return ''
 
 
-def api_url():
-    """端点：LLM_API_URL 覆盖，默认 SiliconFlow（公开供应商）。"""
-    return os.getenv("LLM_API_URL", DEFAULT_API_URL)
-
-
-def chat(model, messages, temperature=None, timeout=240, retries=2):
+def chat(model, messages, temperature=None, timeout=240, retries=2, url=None, key=None):
     """一次非流式对话，返回 message.content 字符串。
 
     messages: OpenAI 格式（文本或 image_url 多模态均可）。
     temperature: None 表示不传该字段（用模型默认值）。
+    url/key 缺省走文本端点（api_url + 自动选 key）。
     retries: 5xx / 超时 / 网络错误自动重试次数；4xx 直接抛。
     """
     body = {"model": model, "messages": messages}
     if temperature is not None:
         body["temperature"] = temperature
-    key = get_key()
+    url = url or api_url()
+    key = key or get_key()
     for attempt in range(retries + 1):
         try:
             req = urllib.request.Request(
-                api_url(), data=json.dumps(body).encode(),
+                url, data=json.dumps(body).encode(),
                 headers={"Authorization": "Bearer " + key, "Content-Type": "application/json"})
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 resp = json.loads(r.read())
@@ -67,6 +88,12 @@ def chat(model, messages, temperature=None, timeout=240, retries=2):
                 time.sleep(1.5 * (attempt + 1))
                 continue
             raise
+
+
+def chat_vision(messages, temperature=None, timeout=240, retries=2):
+    """识图专用：VISION_MODEL + 识图端点/key（随 VISION_PROVIDER 切换）。"""
+    return chat(VISION_MODEL, messages, temperature=temperature, timeout=timeout, retries=retries,
+                url=vision_url(), key=get_key(_VISION_KEY_ENV))
 
 
 def chat_json(model, messages, temperature=0.2, timeout=240, retries=2):
@@ -115,7 +142,9 @@ def img_url(path_or_url):
 
 
 if __name__ == "__main__":
-    print(f"api_url = {api_url()}")
+    print(f"vision_provider = {os.getenv('VISION_PROVIDER', 'siliconflow')}")
+    print(f"vision_url = {vision_url()}")
     print(f"VISION_MODEL = {VISION_MODEL}")
     print(f"TEXT_MODEL = {TEXT_MODEL}")
-    print(f"key_configured = {bool(get_key())}")
+    print(f"vision_key_configured = {bool(get_key(_VISION_KEY_ENV))}")
+    print(f"text_key_configured = {bool(get_key())}")

@@ -24,7 +24,7 @@ def extract_structure(img_data_url):
         {"type": "image_url", "image_url": {"url": img_data_url}},
         {"type": "text", "text": STRUCTURE_PROMPT},
     ]}]
-    return llm.chat(llm.VISION_MODEL, msg, temperature=0.2)
+    return llm.chat_vision(msg, temperature=0.2)
 
 
 def to_mermaid(structure):

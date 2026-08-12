@@ -24,7 +24,7 @@ def main():
         {"type": "image_url", "image_url": {"url": llm.img_url(img_b)}},
         {"type": "text", "text": PROMPT},
     ]}]
-    print(llm.chat(llm.VISION_MODEL, messages))
+    print(llm.chat_vision(messages))
 
 
 if __name__ == "__main__":
