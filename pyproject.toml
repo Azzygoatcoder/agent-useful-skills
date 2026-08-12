@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "claude-useful-skills"
+version = "1.1.0"
+description = "模块化 AI 科研/工程技能 monorepo（Claude Code）"
+requires-python = ">=3.9"
+
+[project.scripts]
+review = "review:main"
+vision = "vision:main"
+consistency-check = "consistency_check:main"
+fig2drawio = "fig2drawio:main"
+office-tools = "office_tools:main"
+latex-build = "latex_build:main"
+security-audit-tools = "security_audit_tools:main"
+data-plot = "data_plot:main"
+style-reference-docx = "style_reference_docx:main"
+
+[tool.setuptools]
+package-dir = {"" = "bin"}
+py-modules = [
+    "llm",
+    "vision",
+    "review",
+    "consistency_check",
+    "fig2drawio",
+    "data_plot",
+    "office_tools",
+    "latex_build",
+    "security_audit_tools",
+    "style_reference_docx",
+]

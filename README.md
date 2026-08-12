@@ -57,7 +57,7 @@ claude-useful-skills/
 | 脚本 | 用途 | 依赖 |
 |------|------|------|
 | vision.py | 识图（Qwen3-VL-32B，OpenAI 兼容） | `LLM_API_URL` + key（env） |
-| review.py | 跨模型对抗评审（Qwen3.5-397B） | `LLM_API_URL` + key（env） |
+| review.py | 跨模型对抗评审（kill-argument 结构化 JSON，Qwen3.5-397B） | `LLM_API_URL` + key（env） |
 | gen-image-mcp.js | 通用生图 MCP server（OpenAI 兼容） | `GEN_IMAGE_URL` / `GEN_IMAGE_PROVIDERS`（env） |
 | office_tools.py | Office 处理（Excel / pandoc md→docx/pptx / 提图） | openpyxl + pandoc |
 | latex_build.py | LaTeX 模板库管理（new/build/pages） | latexmk + xelatex |
@@ -103,7 +103,15 @@ New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\paper-reading
 
 ### Helper 脚本
 
-`bin/` 下的脚本直接用 `python bin/<script>.py` 调用，或加入 PATH。
+`bin/` 下的脚本可直接 `python bin/<script>.py` 调用，也支持 `pip install -e .` 一键安装为 console 命令（推荐，不依赖 junction）：
+
+```bash
+pip install -e .
+review file.md           # 跨模型对抗评审（结构化 JSON）
+vision img.png "描述"    # 识图
+office-tools md2docx a.md b.docx
+latex-build list
+```
 
 ## 密钥配置
 

@@ -9,7 +9,7 @@ review.py / vision.py / consistency_check.py / fig2drawio.py 共用的调用层�
 - 端点用 LLM_API_URL 覆盖；默认 SiliconFlow（公开供应商）
 - 自定义供应商（私有端点）不写进本文件，仅通过环境变量本地注入
 """
-import sys, json, os, base64, urllib.request, urllib.error, time
+import sys, json, os, base64, urllib.request, urllib.error, time, re
 
 sys.stdout.reconfigure(encoding='utf-8')  # 根治 GBK 崩溃
 
@@ -64,6 +64,29 @@ def chat(model, messages, temperature=None, timeout=240, retries=2):
                 time.sleep(1.5 * (attempt + 1))
                 continue
             raise
+
+
+def chat_json(model, messages, temperature=0.2, timeout=240, retries=2):
+    """chat() 的 JSON 变体：要求模型只输出 JSON，解析失败追加纠正再试。
+
+    返回解析后的 dict；重试耗尽仍失败返回 None（由调用方处理）。
+    """
+    for attempt in range(retries + 1):
+        raw = chat(model, messages, temperature=temperature, timeout=timeout, retries=1)
+        m = re.search(r"```(?:json)?\s*\n?(.*?)```", raw, re.S)
+        if m:
+            raw = m.group(1).strip()
+        s, e = raw.find("{"), raw.rfind("}")
+        if s != -1 and e > s:
+            raw = raw[s:e + 1]
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            if attempt < retries:
+                messages = messages + [{"role": "user", "content": "上一条回复不是合法 JSON，请严格只重新输出一个合法 JSON 对象。"}]
+                continue
+            return None
+    return None
 
 
 def img_url(path_or_url):

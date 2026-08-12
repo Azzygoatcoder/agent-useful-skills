@@ -21,3 +21,4 @@ settings.local.json
 # Python
 __pycache__/
 *.pyc
+*.egg-info/
