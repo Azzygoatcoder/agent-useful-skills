@@ -1,0 +1,44 @@
+% !TEX program = pdflatex
+% NeurIPS 官方模板（ML 方向投稿候选）
+% 前置：下载当年官方 neurips_YYYY.sty 放本目录
+%   https://neurips.cc/  → Paper Guidelines → Style files
+% 编译: latexmk -pdf main.tex（或 bin/latex_build.py build --dir . --engine pdflatex）
+\documentclass{article}
+\usepackage[preprint]{neurips_2025}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{nicefrac}
+\usepackage{microtype}
+
+\title{Paper Title}
+
+\author{%
+  Author One\\
+  Shanghai Jiao Tong University\\
+  \texttt{author@example.com}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This is the abstract.
+\end{abstract}
+
+\section{Introduction}
+
+\section{Method}
+
+\section{Experiments}
+
+\section{Conclusion}
+
+\bibliography{refs}
+\bibliographystyle{plainnat}
+
+\end{document}

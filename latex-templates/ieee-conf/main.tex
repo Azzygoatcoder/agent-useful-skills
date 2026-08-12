@@ -1,0 +1,62 @@
+% !TEX program = pdflatex
+% IEEE 会议论文模板（DAC/ICCAD 等 EDA 方向投稿）
+% IEEEtran.cls 已随 MiKTeX 安装
+% 编译: latexmk -pdf main.tex（或 bin/latex_build.py build --dir . --engine pdflatex）
+\documentclass[conference]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{Paper Title: A Shortened Version}
+
+\author{\IEEEauthorblockN{Author One}
+\IEEEauthorblockA{\textit{School of Electronic Information and Electrical Engineering}\\
+Shanghai Jiao Tong University, Shanghai, China \\
+author@example.com}
+\and
+\IEEEauthorblockN{Author Two}
+\IEEEauthorblockA{\textit{Department of XXX}\\
+Shanghai Jiao Tong University, Shanghai, China \\
+author2@example.com}}
+
+\maketitle
+
+\begin{abstract}
+This is the abstract. Describe the problem, method, and result.
+\end{abstract}
+
+\begin{IEEEkeywords}
+circuit, LLM, EDA
+\end{IEEEkeywords}
+
+\section{Introduction}
+Background \cite{dac2026} and contribution bullets:
+\begin{itemize}
+\item Contribution one.
+\item Contribution two.
+\end{itemize}
+
+\section{Method}
+See Eq.~\eqref{eq:loss}.
+\begin{equation}
+\label{eq:loss}
+  \mathcal{L} = \mathbb{E}[-\log p_\theta(y \mid x)]
+\end{equation}
+
+\section{Experiments}
+
+\section{Conclusion}
+
+\section*{Acknowledgment}
+
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}

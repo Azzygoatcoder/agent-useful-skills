@@ -1,0 +1,16 @@
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Audit reports (keep local)
+docs/SECURITY_AUDIT.md
+
+# Claude Code local overrides
+.claude/settings.local.json

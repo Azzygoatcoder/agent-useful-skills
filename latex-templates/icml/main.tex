@@ -1,0 +1,40 @@
+% !TEX program = pdflatex
+% ICML 官方模板（ML 方向投稿，PRP 方向二候选）
+% 前置：下载当年官方 icmlYYYY.sty 放本目录
+%   https://icml.cc/  → Author Guidelines → LaTeX style files
+% 编译: latexmk -pdf main.tex（或 bin/latex_build.py build --dir . --engine pdflatex）
+\documentclass{article}
+\usepackage[accepted]{icml2025}
+
+\icmltitlerunning{Short Title}
+
+\begin{document}
+
+\twocolumn[
+\icmltitle{Paper Title}
+
+\icmlauthor{Author One}{author@example.com}
+\icmlaffiliation{Shanghai Jiao Tong University}
+
+\icmlkeywords{machine learning, LLM}
+
+\vskip 0.3in
+]
+
+\begin{abstract}
+This is the abstract.
+\end{abstract}
+
+\section{Introduction}
+ML paper structure: related work, method, experiments (ablation, reproducibility).
+
+\section{Method}
+
+\section{Experiments}
+
+\section{Conclusion}
+
+\bibliography{refs}
+\bibliographystyle{icml2025}
+
+\end{document}

@@ -1,0 +1,54 @@
+% !TEX program = xelatex
+% SJTUReport 示例——实习/课程/PRP 报告
+% 编译: latexmk -xelatex main.tex（或 bin/latex_build.py build --dir .）
+\documentclass{sjtureport}
+\usepackage[backend=biber,style=gb7714-2015]{biblatex}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\addbibresource{refs.bib}
+
+\title{实习报告：智慧养老多智能体系统}
+\author{张三}
+\date{2026 年 8 月}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+本报告介绍 xxx 项目的进展。核心结论：xxx。
+\end{abstract}
+
+\section{引言}
+背景与动机。引用示例 \cite{sjtu2026}。
+
+\section{方法}
+\subsection{整体框架}
+三层架构：记忆层、决策层、执行层。
+
+\subsection{关键公式}
+\begin{equation}
+  \text{score}(a) = \sum_{i=1}^{n} w_i \cdot x_i(a)
+\end{equation}
+
+\section{实验结果}
+\subsection{定量结果}
+\begin{table}[h]
+  \centering
+  \begin{tabular}{lcc}
+    \toprule
+    方案 & 准确率 & F1 \\
+    \midrule
+    Baseline & 0.85 & 0.83 \\
+    Ours     & 0.91 & 0.90 \\
+    \bottomrule
+  \end{tabular}
+  \caption{实验对比}
+\end{table}
+
+\section{结论}
+总结与下一步计划。
+
+\printbibliography[heading=bibintoc]
+
+\end{document}
