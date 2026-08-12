@@ -54,4 +54,4 @@ latex-build list
 1. **场景判定表**：先判「给谁看、什么深度」再走流程
 2. **自进化日志**：每个 skill 尾部 `## 自进化日志`，实战教训写回；晋升见 self-evolve skill
 3. **跨模型验证**：生成物用独立模型兜底（vision 渲染 / review 语义）
-4. **脱敏**：私有供应商/key 只走 env，不进仓库（默认 SiliconFlow 公开）
+4. **配置走 env**：私有供应商/key 只在本地环境变量，仓库天然不含（默认 SiliconFlow 公开）

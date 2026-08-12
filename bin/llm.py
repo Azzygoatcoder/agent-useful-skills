@@ -4,10 +4,10 @@
 review.py / vision.py / consistency_check.py / fig2drawio.py 共用的调用层：
 统一 key 解析、端点覆盖、超时/重试，消除各脚本复制的样板。
 
-脱敏约定：
-- key 优先读环境变量，兜底 ~/.claude/settings.json（Claude Code 本地设置，不入库）
+配置约定（仓库不含任何密钥或私有端点）：
+- key 优先读环境变量，兜底 ~/.claude/settings.json（Claude Code 本地设置）
 - 端点用 env 覆盖；默认 SiliconFlow（公开供应商）
-- 自定义供应商（私有端点）不写进本文件，仅通过环境变量本地注入
+- 私有端点仅通过环境变量本地注入，不写进本文件
 """
 import sys, json, os, base64, urllib.request, urllib.error, time, re
 
