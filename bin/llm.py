@@ -16,6 +16,7 @@ sys.stdout.reconfigure(encoding='utf-8')  # 根治 GBK 崩溃
 DEFAULT_API_URL = "https://api.siliconflow.cn/v1/chat/completions"
 VISION_MODEL = os.getenv("VISION_MODEL", "Qwen/Qwen3-VL-32B-Instruct")
 TEXT_MODEL = os.getenv("REVIEW_MODEL", "Qwen/Qwen3.5-397B-A17B")
+MAX_INPUT_CHARS = int(os.getenv("MAX_INPUT_CHARS", "120000"))
 
 
 def get_key():
@@ -89,10 +90,24 @@ def chat_json(model, messages, temperature=0.2, timeout=240, retries=2):
     return None
 
 
+def truncate_text(text, limit=None):
+    """超长文本截断，保留头尾、中间标记省略，返回 (截断后文本, 是否截断)。"""
+    limit = limit if limit is not None else MAX_INPUT_CHARS
+    if len(text) <= limit:
+        return text, False
+    head = int(limit * 0.7)
+    tail = int(limit * 0.3)
+    out = text[:head] + f"\n\n...［截断：原文 {len(text)} 字符，超 {limit} 上限，中间已省略］...\n\n" + text[-tail:]
+    return out, True
+
+
 def img_url(path_or_url):
-    """图片路径 → data URL；已是 http(s):// 或 data: 则原样返回。"""
+    """图片路径 → data URL；已是 http(s):// 或 data: 则原样返回。超大图片告警。"""
     if path_or_url.startswith(("http://", "https://", "data:")):
         return path_or_url
+    size = os.path.getsize(path_or_url)
+    if size > 15 * 1024 * 1024:  # 15MB，base64 后约 20MB，接近多数视觉 API 上限
+        print(f"[warning] 图片 {os.path.basename(path_or_url)} 达 {size // 1024 // 1024}MB，可能超出视觉 API 限制，建议先压缩", file=sys.stderr)
     with open(path_or_url, 'rb') as f:
         return "data:image/png;base64," + base64.b64encode(f.read()).decode()
 

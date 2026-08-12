@@ -45,6 +45,9 @@ def main():
         src = "直接文本输入"
     if focus:
         content += f"\n\n[重点审查方向] {focus}"
+    content, truncated = llm.truncate_text(content)
+    if truncated:
+        print(f"[warning] 输入超长，已截断到 {llm.MAX_INPUT_CHARS} 字符（保留头尾）", file=sys.stderr)
 
     messages = [
         {"role": "system", "content": REVIEW_PROMPT},

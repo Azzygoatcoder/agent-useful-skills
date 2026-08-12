@@ -21,6 +21,14 @@
 - **制图闭环**：生图(2) → 识图(1) 读结构 → fig2drawio(4) 复刻矢量 → consistency-check 一致性 diff
 - **审计闭环**：code-security-audit → review(3) 对抗攻击 findings → 误报过滤
 
+```mermaid
+flowchart LR
+    R["读文献<br>paper-reading"] --> D["绘图<br>figure-drawing / data-plot"]
+    D --> W["写作<br>paper-writing / office-tools"]
+    W --> V["评审<br>review.py"]
+    V -.->|修订| W
+```
+
 ## 安装与命令
 
 ```bash
