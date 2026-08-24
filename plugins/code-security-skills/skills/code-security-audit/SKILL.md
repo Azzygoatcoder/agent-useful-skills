@@ -275,54 +275,7 @@ These are NOT valid reasons to close a finding. When you catch yourself using th
 
 ### Phase 3 — Report Compilation
 
-Write the audit report to an agreed location. Use this exact structure:
-
-```
-# [Project Name] Security Audit Report
-
-**Date:** [date]
-**Audit commit:** [git rev-parse HEAD]
-**Scope:** [what was reviewed]
-**Methodology:** Three parallel reviews covering (1) secrets & credentials,
-  (2) input validation & injection, (3) authentication, cryptography & dependencies
-
-## Executive Summary
-One paragraph: total findings by severity, most critical issues, overall risk posture.
-
-## Risk Distribution
-Table: | Severity | Count | Finding IDs |
-
-## Critical Findings
-One subsection per finding:
-
-### SSRF-1 — [title]
-<!-- AUDIT:STATUS=open SEVERITY=critical FILE=path/to/file.py LINES=123-145 -->
-
-- **Finding:** title
-- **Severity:** Critical
-- **File:** path (line numbers)
-- **Description:** what and why it matters
-- **Vulnerable code:** fenced code block
-- **Remediation:** concrete fix with corrected code
-
-## High Findings
-[Same format with category-prefixed IDs]
-
-## Medium Findings
-[Same format with category-prefixed IDs]
-
-## Low Findings
-[Same format with category-prefixed IDs]
-
-## Cross-Cutting Recommendations
-Themes spanning multiple findings.
-
-## Remediation Priority Matrix
-Table: | ID | Finding | Effort | Impact | Priority (P1-P4) |
-
-## Appendix
-Commit hash, verification guidance per finding.
-```
+Write the audit report to an agreed location. Use the exact report template in `references/audit-report-template.md` (report section).
 
 **Status annotation format** (the `<!-- AUDIT:... -->` line after each finding title):
 
@@ -364,63 +317,13 @@ When the user says fixes are applied and wants verification, run an **incrementa
 
 6. **Update the report** — add a Re-Audit section at the top:
 
-```
-## Re-Audit ([date])
-
-**Diff range:** <audit-commit>..<current-commit>
-**Files changed:** N
-
-### Status Summary
-Table: | Status | Count |
-       | fixed | N |
-       | not-fixed | N |
-       | partial | N |
-       | deferred | N |
-       | unchanged | N |
-
-### Fixed (N of total)
-Table: | ID | Finding | Fix Verified At |
-
-### Not Fixed (N of total)
-Table: | ID | Finding | Status/reason |
-
-### Partially Fixed (N of total)
-Table: | ID | Finding | What's done vs. remaining |
-
-### New Findings
-Any issues introduced by the fixes.
-
-### Verdict
-One paragraph summary.
-```
+6. **Update the report** — add a Re-Audit section at the top using the template in `references/audit-report-template.md` (re-audit section).
 
 **Also update the in-line annotations** — when a finding is verified as fixed, change its `<!-- AUDIT:STATUS=... -->` line from `STATUS=open` to `STATUS=fixed COMMIT=<hash>`.
 
-## Quick Reference: Vulnerability Categories
+## Vulnerable Patterns Reference
 
-See `references/vulnerability-patterns.md` for grep patterns and remediation templates for each category. Read that file before starting Phase 2 to know what to look for.
-
-Key categories covered:
-- Path Traversal, CSRF/CORS, Command Injection, XSS, SSRF
-- SQL Injection, Insecure Deserialization, SSTI, Eval Injection
-- File Permissions, Plaintext Credentials, Environment Leakage
-- Dependency Management, Subprocess Injection
-- Auth Bypass, Session Weaknesses, Cryptographic Weaknesses
-- Temp File Handling, Log Forging, Race Conditions
-
-## Common Mistakes
-
-| Mistake | Correction |
-|---------|------------|
-| Running a single broad agent | Three focused agents find different things. Always use all three. |
-| Accepting agent findings without reading code | Agents summarize; you must verify each finding's reality and severity. |
-| Skipping Phase 4 because "fixes look right" | Always verify every finding against current code. Fixes can be incomplete or introduce new issues. |
-| Writing report before verifying | Phase 3 (write) only after Phase 2 (verify). |
-| Using severity labels inconsistently | Follow the criteria table above. Critical = remote + unauthenticated + secret access or RCE. |
-| Not including concrete remediations | Every finding must have a fix code snippet, not just "fix this." |
-| Forgetting to check .gitignore and git history | Secrets accidentally committed are still in history even if removed from HEAD. |
-| Using sequential IDs (N1, N2...) instead of category prefixes | Sequential IDs shift when new findings are inserted. Use stable category-prefixed IDs (SSRF-1, PATH-1, etc.). |
-| Skipping status annotations in findings | Without `<!-- AUDIT:STATUS=... -->` lines, `mark-fixed` and incremental re-audit cannot work. |
+Grep patterns and remediation templates per category live in `references/vulnerability-patterns.md` — read it BEFORE Phase 2 (Pre-Flight requires it).
 
 ## Do NOT — Negative Heuristics
 
@@ -464,3 +367,5 @@ These rules are NON-NEGOTIABLE and take precedence over all other considerations
 | 2026-06-21 | v1.3 | FABLE-5 风格重写：Pre-Flight Gate、Confidence、Self-Check、Meta-Cognition Trap |
 | 2026-08-12 | 对齐科研骨架新范式 | 场景判定表（快速/全面/增量/单 PR 四路分流）；review.py 跨模型对抗验证进 Phase 2；security-audit-tools.py 脚本化状态追踪 |
 | 2026-08-12 | demo-caregiver-training 首审 | 小代码库（1474 行）直读全量等效并行探索；**review.py 对抗实际抓出 3 个问题**（PROMPT-1 严重度低估→升 High、AUTH/STATE 威胁模型自相矛盾、SECRET-1 是噪音→移建议区）——跨模型对抗验证价值实证；威胁模型必须先声明（本地 vs 暴露）再定级 |
+
+| 2026-08-24 | P0 瘦身 | 报告模板（report + re-audit）外移 references/audit-report-template.md；Quick Reference 压缩为指针、Common Mistakes 并入 Do NOT（SKILL.md 466→约 300 行） |

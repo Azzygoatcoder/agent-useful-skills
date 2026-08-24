@@ -1,10 +1,6 @@
 ---
 name: review-skill
-description: |
-  GitHub PR review 工作流——看 PR、评审（approve/request-changes/comment）、合并。
-  Use when the user wants to review a PR, approve or request changes, or merge a
-  PR. Triggers on "review 这个 PR", "看下这个 PR", "approve", "要求修改",
-  "request changes", "merge", "合了", "/review".
+description: Use when the user wants GitHub PR operations — open, read and comment, approve or request changes, or merge a PR. This is the operational GitHub flow (issue → PR → review → merge), not the general code-review methodology. Triggers on "review 这个 PR", "看下这个 PR", "approve", "要求修改", "request changes", "merge", "合了", "/review".
 ---
 
 # Review — GitHub PR Review 工作流

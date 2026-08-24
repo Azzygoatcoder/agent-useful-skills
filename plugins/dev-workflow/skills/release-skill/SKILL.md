@@ -1,11 +1,6 @@
 ---
 name: release-skill
-description: |
-  半自动发版本工作流——定版本 → bump → tag → GitHub Release。Use when the user
-  wants to cut a release, bump version, tag, or publish to GitHub Releases.
-  Triggers on "release", "发版本", "bump version", "cut release",
-  "publish release", "/release", "准备发 rc", "发 rc", "tag and release",
-  或用户做完一批功能说"准备发 vX.Y.Z"。
+description: Use when the user wants to cut a release — bump version, tag, and publish to GitHub Releases. Triggers on "release", "发版本", "bump version", "cut release", "publish release", "/release", "准备发 rc", "发 rc", "tag and release", 或用户做完一批功能说"准备发 vX.Y.Z"。
 ---
 
 # Release — 发版本工作流

@@ -1,11 +1,6 @@
 ---
 name: issue-skill
-description: |
-  GitHub issue 工作流——提 bug/feature、分诊、处理闭环、issue→PR。Use when the user
-  wants to create an issue, triage issues, close or resolve issues, or turn an
-  issue into a PR. Triggers on "提 issue", "报 bug", "提 feature request",
-  "开 issue", "/issue", "看 issue", "分诊", "处理 issue", "关 issue",
-  "修这个 issue", "issue 转 PR".
+description: Use when the user wants to create an issue, triage issues, close or resolve issues, or turn an issue into a PR on GitHub. Triggers on "提 issue", "报 bug", "提 feature request", "开 issue", "/issue", "看 issue", "分诊", "处理 issue", "关 issue", "修这个 issue", "issue 转 PR".
 ---
 
 # Issue — GitHub Issue 工作流
