@@ -1,7 +1,7 @@
 # Superpowers — 本地改版说明（科研骨架 fork）
 
 > 本目录是 superpowers 的个人 fork（永不更新上游，原版 MIT 可自由修改）。
-> **上游贡献者指南不适用**——不向 prime-radiant-inc 提 PR。本文件替代原贡献指南。
+> **上游贡献者指南不适用**——本 fork 不向上游（obra/superpowers，原 prime-radiant-inc/superpowers）提 PR。本文件替代原贡献指南。
 
 ## 定位
 
@@ -22,4 +22,4 @@
 ## 相关
 
 - 科研骨架全景与工具：上级仓库（agent-useful-skills）README + skeleton.md（全貌索引）
-- 上游原版：github.com/prime-radiant-inc/superpowers（作参考，不更新）
+- 上游原版：github.com/obra/superpowers（原 prime-radiant-inc/superpowers，已迁移；作参考，不更新）

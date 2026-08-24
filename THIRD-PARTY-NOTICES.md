@@ -17,7 +17,7 @@
 
 ## superpowers
 
-- **来源**: [prime-radiant-inc/superpowers](https://github.com/prime-radiant-inc/superpowers)（MIT License）
+- **来源**: [obra/superpowers](https://github.com/obra/superpowers)（原 prime-radiant-inc/superpowers，已迁移；MIT License）
 - **本仓库的修改**: 本地 fork（永不更新上游），新增 figure-drawing / paper-reading / office-tools / paper-writing 四个自定义 skill
 
 ## diagram-design（不随本仓库分发，仅文档引用）
