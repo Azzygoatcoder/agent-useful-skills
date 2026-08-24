@@ -1,4 +1,4 @@
-# Claude Useful Skills
+# Agent Useful Skills
 
 **模块化 AI 科研/工程技能集合（Claude Code / DeepSeek Harness 通用）。** 把「读论文 → 画图 → 写文档 → 安全审计」这些重复任务，沉淀成可复用的 skill + 脚本，每个模块自带验证环。
 
@@ -24,7 +24,7 @@
 ## 仓库结构（monorepo）
 
 ```
-claude-useful-skills/
+agent-useful-skills/
 ├── plugins/     # 可独立安装的插件（有 .claude-plugin）
 │   ├── code-security-skills/
 │   └── superpowers/
@@ -95,7 +95,7 @@ python bin/data_plot.py demo
 ### 插件
 
 ```bash
-claude plugins install https://github.com/<your-org>/claude-useful-skills --path code-security-skills
+claude plugins install https://github.com/<your-org>/agent-useful-skills --path code-security-skills
 ```
 
 ### Skills

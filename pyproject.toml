@@ -3,9 +3,9 @@ requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "claude-useful-skills"
+name = "agent-useful-skills"
 version = "1.1.0"
-description = "模块化 AI 科研/工程技能 monorepo（Claude Code）"
+description = "模块化 AI 科研/工程技能 monorepo（Claude Code / DeepSeek Harness 通用）"
 requires-python = ">=3.9"
 
 [project.scripts]
@@ -18,6 +18,7 @@ latex-build = "latex_build:main"
 security-audit-tools = "security_audit_tools:main"
 data-plot = "data_plot:main"
 style-reference-docx = "style_reference_docx:main"
+check-skills = "check_skills:main"
 
 [tool.setuptools]
 package-dir = {"" = "bin"}
@@ -32,4 +33,5 @@ py-modules = [
     "latex_build",
     "security_audit_tools",
     "style_reference_docx",
+    "check_skills",
 ]

@@ -94,7 +94,7 @@ mark-* 直接改写 `<!-- AUDIT:STATUS=... -->` 注解行，彻底解决 Edit �
 ### 方式一：从 GitHub 安装（推荐）
 
 ```bash
-claude plugins install https://github.com/Azzygoatcoder/claude-useful-skills --path plugins/code-security-skills
+claude plugins install https://github.com/Azzygoatcoder/agent-useful-skills --path plugins/code-security-skills
 ```
 
 Claude Code 会自动克隆仓库并注册 `plugins/code-security-skills/skills/` 目录下的全部技能。安装后重启 Claude Code 会话即可生效。

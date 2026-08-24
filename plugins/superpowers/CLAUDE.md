@@ -21,5 +21,5 @@
 
 ## 相关
 
-- 科研骨架全景与工具：上级仓库（claude-useful-skills）README + skeleton.md（全貌索引）
+- 科研骨架全景与工具：上级仓库（agent-useful-skills）README + skeleton.md（全貌索引）
 - 上游原版：github.com/prime-radiant-inc/superpowers（作参考，不更新）

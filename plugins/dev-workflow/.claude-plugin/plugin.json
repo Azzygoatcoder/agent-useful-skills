@@ -6,8 +6,8 @@
     "name": "Azzygoatcoder"
   },
   "license": "MIT",
-  "repository": "https://github.com/Azzygoatcoder/claude-useful-skills",
-  "homepage": "https://github.com/Azzygoatcoder/claude-useful-skills#readme",
-  "bugs": "https://github.com/Azzygoatcoder/claude-useful-skills/issues",
+  "repository": "https://github.com/Azzygoatcoder/agent-useful-skills",
+  "homepage": "https://github.com/Azzygoatcoder/agent-useful-skills#readme",
+  "bugs": "https://github.com/Azzygoatcoder/agent-useful-skills/issues",
   "keywords": ["git", "pull-request", "release", "github", "collaboration", "workflow"]
 }
