@@ -1,6 +1,6 @@
 # Claude Useful Skills
 
-**模块化 AI 科研/工程技能集合（Claude Code）。** 把「读论文 → 画图 → 写文档 → 安全审计」这些重复任务，沉淀成可复用的 skill + 脚本，每个模块自带验证环。
+**模块化 AI 科研/工程技能集合（Claude Code / DeepSeek Harness 通用）。** 把「读论文 → 画图 → 写文档 → 安全审计」这些重复任务，沉淀成可复用的 skill + 脚本，每个模块自带验证环。
 
 > 一句话：**LLM 写中间产物 → 脚本固化格式 → 跨模型验证环兜底**。
 
@@ -71,6 +71,8 @@ claude-useful-skills/
 | security-audit-tools.py | 安全审计报告状态管理 | 标准库 |
 | fig2drawio.py | 论文图 → draw.io 复刻 | `LLM_API_URL` + key（env） |
 | consistency_check.py | 矢量图一致性检查 | `LLM_API_URL` + key（env） |
+| check_skills.py | 校验全部 SKILL.md 是否符合 DSH/AgentSkills 规则（name/description/单层发现/运行时耦合） | 标准库 |
+| redeploy-skills.ps1 | DSH 技能链接部署/自愈/校验（Windows junction / POSIX symlink，`-Check` 只读模式） | pwsh 7 |
 
 ## 快速开始
 
@@ -118,6 +120,20 @@ vision img.png "描述"    # 识图
 office-tools md2docx a.md b.docx
 latex-build list
 ```
+
+### DeepSeek Harness（DSH）接入
+
+本仓库 skills 兼容 DSH（Agent Skills 标准运行时，本机已验证全部技能可注册）。DSH 只识别**单层**技能目录 `<技能根>/<技能名>/SKILL.md`，插件内技能需**逐个**建 junction（不要把整个 `skills/` 目录链过去）：
+
+```powershell
+# 用户级技能根：~/.dsh/skills（所有会话）；项目级：<工作区>/.dsh/skills
+New-Item -ItemType Junction -Path "$env:USERPROFILE\.dsh\skills\paper-reading" -Target "$pwd\plugins\superpowers\skills\paper-reading"
+```
+
+- 校验：`python bin/check_skills.py`（或 `pip install -e .` 后 `check-skills`），确保 SKILL.md 符合 DSH 解析规则
+- 自动化部署/自愈（推荐替代手写 junction）：`pwsh bin/redeploy-skills.ps1`（创建缺失链接、清理失效链接）；`-Check` 为只读校验（链接完整性 + frontmatter）。支持 `DSH_HOME` / `DSH_SKILLS` 环境变量覆盖目标目录
+- ⚠️ 链接部署下，在 DSH 技能管理界面（如 skill-explorer）中**只用启用/禁用，不要用删除**——删除可能级联到链接目标（即仓库真实文件）
+- 注意：`subagent-driven-development/scripts/` 下 3 个无扩展名脚本是 bash，Windows 需在 Git Bash / WSL 下运行
 
 ## 密钥配置
 
