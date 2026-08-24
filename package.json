@@ -1,0 +1,51 @@
+{
+  "name": "agent-useful-skills",
+  "version": "1.1.0",
+  "description": "Modular AI research/engineering skill pack for DeepSeek Harness — security audit, paper workflows, dev workflow, storage analysis. Installable via dsh plugin add.",
+  "type": "module",
+  "main": "./index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.mjs",
+    "cordis.patch.yml",
+    "skills",
+    "plugins",
+    "bin",
+    "latex-templates",
+    "assets",
+    "README.md",
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md",
+    "VERSIONING.md",
+    "skeleton.md",
+    "pyproject.toml"
+  ],
+  "keywords": [
+    "deepseek",
+    "harness",
+    "dsh",
+    "dsh-plugin",
+    "skills",
+    "claude-code",
+    "security-audit",
+    "paper-workflow"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Azzygoatcoder/agent-useful-skills.git"
+  },
+  "homepage": "https://github.com/Azzygoatcoder/agent-useful-skills",
+  "dependencies": {
+    "@deepseek-ai/dsh-skill-filesystem": "^0.1.1-rc.1"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

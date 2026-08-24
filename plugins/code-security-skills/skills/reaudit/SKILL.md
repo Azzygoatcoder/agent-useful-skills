@@ -1,6 +1,12 @@
 ---
 name: reaudit
-description: Use when the user types /reaudit or asks to verify that security fixes have been applied, re-audit a codebase after fixes, or check whether previous audit findings are resolved. Shortcut for code-security-audit Phase 4 (re-audit verification). Triggers on "/reaudit", "re-audit", "verify fixes", "再审计", "检查修复", "确认修复". Also enables lightweight state tracking: /reaudit mark-fixed <ID>, /reaudit mark-deferred <ID>, /reaudit status.
+description: >
+  Use when the user types /reaudit or asks to verify that security fixes have
+  been applied, re-audit a codebase after fixes, or check whether previous audit
+  findings are resolved. Shortcut for code-security-audit Phase 4 (re-audit
+  verification). Triggers on "/reaudit", "re-audit", "verify fixes", "再审计",
+  "检查修复", "确认修复". Also enables lightweight state tracking:
+  /reaudit mark-fixed <ID>, /reaudit mark-deferred <ID>, /reaudit status.
 ---
 
 # /reaudit — Verify Security Fixes & State Tracking

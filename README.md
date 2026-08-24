@@ -25,7 +25,8 @@
 
 ```
 agent-useful-skills/
-├── plugins/     # 可独立安装的插件（有 .claude-plugin）
+├── index.mjs / package.json / cordis.patch.yml  # DSH 插件外壳（dsh.bundle，把全部技能注册进 ctx.skills）
+├── plugins/     # 可独立安装的 Claude 插件（有 .claude-plugin）
 │   ├── code-security-skills/
 │   └── superpowers/
 ├── skills/      # 独立 skill（单 SKILL.md，非插件）
@@ -134,6 +135,18 @@ New-Item -ItemType Junction -Path "$env:USERPROFILE\.dsh\skills\paper-reading" -
 - 自动化部署/自愈（推荐替代手写 junction）：`pwsh bin/redeploy-skills.ps1`（创建缺失链接、清理失效链接）；`-Check` 为只读校验（链接完整性 + frontmatter）。支持 `DSH_HOME` / `DSH_SKILLS` 环境变量覆盖目标目录
 - ⚠️ 链接部署下，在 DSH 技能管理界面（如 skill-explorer）中**只用启用/禁用，不要用删除**——删除可能级联到链接目标（即仓库真实文件）
 - 注意：`subagent-driven-development/scripts/` 下 3 个无扩展名脚本是 bash，Windows 需在 Git Bash / WSL 下运行
+
+#### DSH 插件安装（dsh-market 一键）
+
+仓库根带有 `dsh.bundle` 声明（`package.json` + `cordis.patch.yml` + `index.mjs`），可作 DSH 插件安装，在 dsh-market / awesome-dsh-plugin 中可见：
+
+```powershell
+dsh plugin --profile web add github:Azzygoatcoder/agent-useful-skills
+```
+
+- 插件把 `<repo>/skills/*` 与 `<repo>/plugins/*/skills/*` 下全部单层技能注册进 `ctx.skills`（与 redeploy-skills.ps1 同一份技能契约）
+- **去重契约**：已通过 junction 部署在 `~/.dsh/skills`（或项目 `.dsh/skills`）的技能名会被插件自动跳过，本地在用的副本优先，不会重复注册；全新机器才会获得插件自带的技能
+- 白盒自检：`node bin/verify-plugin.mjs`（需仓库根 `node_modules/@deepseek-ai/dsh-skill-filesystem` 可解析，见 `verify-plugin.mjs` 头部注释）
 
 ## 密钥配置
 

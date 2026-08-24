@@ -1,0 +1,6 @@
+# DSH bundle profile patch for agent-useful-skills.
+# Install: dsh plugin --profile web add agent-useful-skills
+#   (or github:Azzygoatcoder/agent-useful-skills)
+- insert:
+    - id: agent-useful-skills
+      name: agent-useful-skills
