@@ -16,7 +16,7 @@
 
 - **新 skill 按科研骨架设计语言写**：场景判定表（先判深度再走流程）+ 自进化日志 + 跨模型验证 + 边界。参考 figure-drawing / paper-reading 的 SKILL.md 结构
 - **不覆盖/不改写上游已调优内容**（Red Flags 表、rationalization 清单、"human partner" 措辞）除非有实战证据改进
-- **skill 改动流程**：`superpowers:writing-skills` 起草 → 实战验证（如 paper-reading 的 GREEN 验证）→ 自进化日志记录
+- **skill 改动流程**：`archive/writing-skills` 起草（维护者文档，默认不注册）→ 实战验证（如 paper-reading 的 GREEN 验证）→ 自进化日志记录
 - **工具脚本在仓库根 `bin/`**（vision.py / review.py / office_tools.py / latex_build.py / security-audit-tools.py / style_reference_docx.py）；`pip install -e .` 后可作 console 命令调用（review / vision / office-tools / latex-build / ...，不依赖 junction）
 
 ## 相关

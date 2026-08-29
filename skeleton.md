@@ -47,7 +47,7 @@ latex-build list
 | paper-reading | plugins/superpowers/skills/paper-reading | 文献 A搜索/B防撞车/C快速读/D精读 |
 | paper-writing | plugins/superpowers/skills/paper-writing | 写作 A会议/B学位/C报告/D Office |
 | office-tools | plugins/superpowers/skills/office-tools | Office md↔xlsx/docx/pptx |
-| self-evolve | plugins/superpowers/skills/self-evolve | 自进化闭环 |
+| self-evolve | archive/self-evolve | 自进化闭环（归档，默认不注册） |
 | code-security-audit | plugins/code-security-skills/skills/code-security-audit | 安全审计 |
 | storage-analyzer | skills/storage-analyzer | 存储分析 |
 

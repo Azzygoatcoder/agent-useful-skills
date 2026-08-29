@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-useful-skills"
-version = "1.2.0"
+version = "1.2.1"
 description = "模块化 AI 科研/工程技能 monorepo（Claude Code / DeepSeek Harness 通用）"
 requires-python = ">=3.9"
 

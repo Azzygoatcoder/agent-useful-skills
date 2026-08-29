@@ -63,6 +63,16 @@ export function repoSkillRoots(packageRoot = PACKAGE_ROOT) {
   return dirs
 }
 
+/** Archived/optional skill directories kept in the repository but not in default skill roots. */
+export const ARCHIVE_ROOT = join(PACKAGE_ROOT, 'archive')
+export function archivedSkillRoots(packageRoot = PACKAGE_ROOT) {
+  const dir = join(packageRoot, 'archive')
+  if (!existsSync(dir)) return []
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => join(dir, entry.name))
+}
+
 /** Nearest ancestor containing .git (same shape as the host provider's project-root discovery). */
 export async function findProjectRoot(cwd) {
   let current = cwd

@@ -79,11 +79,14 @@ def parse_frontmatter(text: str):
 
 
 def iter_skill_dirs(root: Path):
-    """遍历所有技能根（skills/ 与 plugins/*/skills/）下的单层技能目录。"""
+    """遍历所有技能根（skills/、plugins/*/skills/ 与 archive/）下的单层技能目录。"""
     roots = [root / "skills"]
     plugins = root / "plugins"
     if plugins.is_dir():
         roots += sorted(p / "skills" for p in plugins.iterdir() if p.is_dir())
+    archive = root / "archive"
+    if archive.is_dir():
+        roots.append(archive)
     for base in roots:
         if not base.is_dir():
             continue

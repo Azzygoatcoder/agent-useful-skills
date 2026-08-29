@@ -19,6 +19,7 @@ import {
   AgentUsefulSkillsProvider,
   existingSkillNames,
   repoSkillRoots,
+  archivedSkillRoots,
   DEFAULT_SKILL_NAMES,
   FALLBACK_RANK,
   PROVIDER_SOURCE,
@@ -64,12 +65,17 @@ const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 
 // --- 2/3. 去重契约 + 候选形状 ---
 const dirs = repoSkillRoots().map((d) => d.replace(/\\/g, '/').split('/').at(-1)).sort()
-check('技能目录发现 = 仓库契约（24+ 目录）', dirs.length >= 24, `${dirs.length} 个: ${dirs.join(', ')}`)
+check('默认技能目录发现 = 仓库默认清单', dirs.length >= DEFAULT_SKILL_NAMES.length, `${dirs.length} 个: ${dirs.join(', ')}`)
 
 const missingDefault = DEFAULT_SKILL_NAMES.filter((d) => !dirs.includes(d))
-check('默认清单中的技能都存在于仓库', missingDefault.length === 0, missingDefault.join(', '))
-const archived = dirs.filter((d) => !DEFAULT_SKILL_NAMES.includes(d))
-check('默认清单做了减法（存在归档技能）', archived.length > 0, `归档 ${archived.length} 个: ${archived.join(', ')}`)
+check('默认清单中的技能都存在于默认目录', missingDefault.length === 0, missingDefault.join(', '))
+const extraDirs = dirs.filter((d) => !DEFAULT_SKILL_NAMES.includes(d))
+check('默认目录无多余技能', extraDirs.length === 0, extraDirs.join(', '))
+
+const archivedDirs = archivedSkillRoots().map((d) => d.replace(/\\/g, '/').split('/').at(-1)).sort()
+check('归档技能已移入 archive/', archivedDirs.length >= 9, `${archivedDirs.length} 个: ${archivedDirs.join(', ')}`)
+const archiveConflict = archivedDirs.filter((d) => DEFAULT_SKILL_NAMES.includes(d))
+check('归档与默认清单无重叠', archiveConflict.length === 0, archiveConflict.join(', '))
 
 const existing = await existingSkillNames(repoRoot)
 const overlap = existing.size > 0 ? dirs.filter((d) => existing.has(d)) : []

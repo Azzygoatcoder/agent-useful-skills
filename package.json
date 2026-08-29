@@ -1,6 +1,6 @@
 {
   "name": "agent-useful-skills",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Modular AI research/engineering skill pack for DeepSeek Harness — security audit, paper workflows, dev workflow, storage analysis. Installable via dsh plugin add.",
   "type": "module",
   "main": "./index.mjs",
