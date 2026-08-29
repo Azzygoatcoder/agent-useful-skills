@@ -9,7 +9,7 @@ description: Use when the user wants GitHub PR operations — open, read and com
 
 ## 角色
 
-本 skill 是「评审者」的 = 有 merge 权限的 maintainer / owner。作者侧走 pr-skill + superpowers 的 requesting/receiving-code-review。
+本 skill 是「评审者」的 = 有 merge 权限的 maintainer / owner。作者侧走 pr-skill；代码质量评审按场景 B 委托通用 code-review 流程。
 
 ## 场景判定
 

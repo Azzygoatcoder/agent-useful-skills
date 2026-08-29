@@ -1,6 +1,6 @@
 ---
 name: audit
-description: Use when the user types /audit. Shortcut for code-security-audit Phase 1-3 (explore → verify → report). Triggers ONLY on the exact slash command "/audit" — for natural language phrases like "security audit" or "安全审计", the code-security-audit skill handles those.
+description: Use when the user types /audit. Quick entry to the full code security audit flow. Triggers ONLY on the exact slash command "/audit" — for natural language phrases like "security audit" or "安全审计", the code-security-audit skill handles those.
 ---
 
 # /audit — Full Security Audit

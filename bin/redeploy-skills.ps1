@@ -23,6 +23,14 @@ $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $dshHome  = if ($env:DSH_HOME)   { $env:DSH_HOME }   else { Join-Path $HOME '.dsh' }
 $target   = if ($env:DSH_SKILLS) { $env:DSH_SKILLS } else { Join-Path $dshHome 'skills' }
 
+$manifestPath = Join-Path $repoRoot 'skills.manifest.json'
+if (-not (Test-Path $manifestPath)) {
+  Write-Error "缺少 skills.manifest.json：$manifestPath"
+  exit 2
+}
+$manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
+$defaultSkillNames = @($manifest.default)
+
 function Get-SkillSources {
   $dirs = @()
   $top = Join-Path $repoRoot 'skills'
@@ -49,9 +57,14 @@ function Test-Frontmatter([string]$skillDir, [ref]$issues) {
   if (-not $desc.Success) { $issues.Value += "[frontmatter] 缺 description: $($skillDir | Split-Path -Leaf)" }
 }
 
-$sources = @(Get-SkillSources)
+$allSources = @(Get-SkillSources)
+$missingFromManifest = $defaultSkillNames | Where-Object { $_ -notin $allSources.Name }
+if ($missingFromManifest) {
+  Write-Warning "skills.manifest.json 中的技能在仓库未找到: $($missingFromManifest -join ', ')"
+}
+$sources = @($allSources | Where-Object { $_.Name -in $defaultSkillNames })
 if ($sources.Count -eq 0) {
-  Write-Error "仓库内未找到技能目录（检查 <repo>/skills 或 <repo>/plugins/*/skills）"
+  Write-Error "默认技能清单为空或仓库内未找到对应目录（检查 skills.manifest.json）"
   exit 2
 }
 $names = $sources | ForEach-Object { $_.Name }

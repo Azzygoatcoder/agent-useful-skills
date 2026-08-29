@@ -48,7 +48,7 @@ When subagents are unavailable, or the plan is executed in a separate session, r
 2. **Create todos** for the plan items; mark the first task in_progress.
 3. **Execute each task:** mark in_progress, follow each step exactly (the plan has bite-sized steps), run verifications as specified, then mark it completed.
 4. **Review at checkpoints.** Run the full verification at the end of each task before moving on — an early catch of drift.
-5. **Complete:** announce "I'm using the finishing-a-development-branch skill to complete this work" and follow it.
+5. **Complete:** verify the branch's tests and diff, then present merge/PR/keep/discard options to your human partner (or follow the repo's normal integration flow).
 
 **Stop and ask, don't guess.** STOP immediately when:
 - You hit a blocker (missing dependency, test fails, instruction unclear)
@@ -67,17 +67,16 @@ When subagents are unavailable, or the plan is executed in a separate session, r
 
 ```
 Per task:     dispatch implementer → review → fix loop (≤5 rounds) → ledger "complete"
-Whole branch: setup → tasks → final whole-branch review → cleanup → finishing-a-development-branch
+Whole branch: setup → tasks → final whole-branch review → cleanup → present integration options
 ```
 
 Each step is specified in Setup, The Task Loop, and Final Review below.
 
 ## Setup
 
-Ensure the work happens in an isolated workspace: use
-superpowers:using-git-worktrees to create one or verify the existing one.
-Never start implementation on a main/master branch without your human
-partner's explicit consent.
+Ensure the work happens in an isolated workspace (a git worktree or a
+separate branch) when available. Never start implementation on a main/master
+branch without your human partner's explicit consent.
 
 Conversation memory does not survive compaction. In real sessions,
 controllers that lost their place have re-dispatched entire completed task
@@ -361,8 +360,7 @@ branch started from, e.g. `git merge-base main HEAD`) and include the
 printed path in the final review dispatch, so the final reviewer reads
 one file instead of re-deriving the branch diff with git commands. Dispatch
 on the most capable available model (see Model Selection), using
-superpowers:requesting-code-review's
-[code-reviewer.md](../requesting-code-review/code-reviewer.md). Point it at
+[code-reviewer.md](code-reviewer.md). Point it at
 the ledger's deferred-minor and parked lines so it can triage which must be
 fixed before merge.
 
@@ -376,7 +374,7 @@ Then run exactly one scoped re-review of the fix wave
 Adjudicate any residual findings as in the task loop's breaker: park with
 rulings, or stop on load-bearing ones. There is no second fix wave —
 residual load-bearing findings surface to your human partner when
-finishing-a-development-branch presents the options.
+you present the integration options.
 
 ## Finish
 
@@ -385,7 +383,9 @@ delete this plan's workspace (`rm -rf <workspace>`) — the git history is
 the record now. Sibling directories belong to other plans; leave them
 alone.
 
-Use superpowers:finishing-a-development-branch.
+Then present the integration options to your human partner: merge, PR, keep,
+or discard. Follow the repo's normal Git workflow; do not invent extra
+ceremony.
 
 ## Common Rationalizations
 
@@ -412,4 +412,4 @@ Task 2 (with a fix round): dispatch implementer → reviewer: "Spec ❌ — miss
   → fix round 1: resume implementer with findings → scoped re-review: all addressed
   → ledger: Task 2: fix round 1/5 (2 addressed, 0 open); Task 2: complete (commits d4e5f6a..b7c8d9e, review clean)
 
-Final: whole-branch review (most capable model) → clean → delete workspace → finishing-a-development-branch.
+Final: whole-branch review (most capable model) → clean → delete workspace → present integration options.

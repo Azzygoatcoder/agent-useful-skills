@@ -1,0 +1,22 @@
+{
+  "default": [
+    "using-superpowers",
+    "test-driven-development",
+    "systematic-debugging",
+    "verification-before-completion",
+    "subagent-driven-development",
+    "figure-drawing",
+    "paper-reading",
+    "paper-writing",
+    "office-tools",
+    "storage-analyzer",
+    "code-security-audit",
+    "audit",
+    "reaudit",
+    "security-fix-skill",
+    "issue-skill",
+    "pr-skill",
+    "release-skill",
+    "review-skill"
+  ]
+}

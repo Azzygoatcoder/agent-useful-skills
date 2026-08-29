@@ -1,6 +1,6 @@
 ---
 name: paper-writing
-description: 论文写作一条龙——venue 定模板 → latex_build 初始化 → 模块化写作 → 编译页数检查 → review 评审。Use when 写论文/投稿/开新论文/写实习报告/毕设。触发词含"写论文"、"paper writing"、"投稿"、"新论文"、"开一个报告"、"写作一条龙"
+description: Use when 写论文/投稿/开新论文/写实习报告/毕设。覆盖 venue 模板选择、模块化写作、LaTeX 编译与页数检查。触发词含"写论文"、"paper writing"、"投稿"、"新论文"、"开一个报告"、"写作一条龙"。
 ---
 
 # Paper Writing — 论文写作一条龙

@@ -37,6 +37,8 @@ latex-build list
 
 脚本也可 `python bin/<script>.py` 直调。共享 client 在 `bin/llm.py`（key 解析 / 端点 / 重试 / 结构化 JSON）。
 
+> **默认注册以 `skills.manifest.json` 为准**：DSH 插件与 `redeploy-skills.ps1` 只部署清单内技能；仓库中其余 skill 保留为归档/可选，不占用默认发现目录。
+
 ## Skill 目录
 
 | Skill | 位置 | 场景 |

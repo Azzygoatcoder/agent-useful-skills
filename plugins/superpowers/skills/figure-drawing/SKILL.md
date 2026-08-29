@@ -1,6 +1,6 @@
 ---
 name: figure-drawing
-description: 论文制图工作流——gpt-image-2 生成概念图 → vision 读结构 → 构造带样式 draw.io XML → 验证。Use when 需要论文级架构图/流程/示意图
+description: Use when 需要论文级架构图/流程图/示意图。产出可编辑 draw.io 矢量图，支持概念图、数据图和技术架构图。
 ---
 
 # Figure Drawing — 论文制图工作流

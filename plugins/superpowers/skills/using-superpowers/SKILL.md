@@ -11,17 +11,17 @@ If you were dispatched as a subagent to execute a specific task, ignore this ski
 
 Check whether a skill clearly applies before acting on a task. When one does, invoke it — and say so.
 
-**Before entering plan mode:** if you haven't already brainstormed, invoke the brainstorming skill first.
+**Before entering plan mode:** only use the optional brainstorming/planning flow when the task is genuinely ambiguous or large. Small, well-specified tasks skip it.
 
 Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it has a checklist, create a todo per item.
 
-**Proportion matters.** Skill ceremony is a tool, not a tax. Small, unambiguous tasks don't need the full process — that's what the fast paths in brainstorming and subagent-driven-development are for. Don't force a heavyweight skill onto something that's clearly a quick fix.
+**Proportion matters.** Skill ceremony is a tool, not a tax. Small, unambiguous tasks don't need the full process — use subagent-driven-development's lightweight path or just do the fix. Don't force a heavyweight skill onto something that's clearly a quick fix.
 
 ## Skill Priority
 
 When multiple skills apply, process skills come first — they set the approach, then implementation skills (frontend-design, etc.) carry it out. Brainstorming and systematic-debugging are Superpowers' most common process skills, but the rule holds for any of them.
 
-- "Let's build X" → superpowers:brainstorming first, then implementation skills.
+- "Let's build X" → if large/ambiguous, use the optional planning flow first; otherwise implement directly.
 - "Fix this bug" → superpowers:systematic-debugging first, then domain skills.
 
 ## Worth a Second Look

@@ -1,8 +1,9 @@
 // agent-useful-skills — DSH bundle entry.
 //
-// Registers the whole repository's skill collection (the same set
-// bin/redeploy-skills.ps1 deploys: <repo>/skills/* and <repo>/plugins/*/skills/*)
-// as a single FileSystemSkillProvider on ctx.skills.
+// Registers the DEFAULT skill collection from skills.manifest.json
+// (the same set bin/redeploy-skills.ps1 deploys). Skills kept in the repo
+// but absent from the manifest remain available as archived/optional files;
+// they are not advertised by the bundle.
 //
 // Coexistence / idempotency contract:
 //  1. The provider SKIPS every skill name already present in the standard
@@ -15,7 +16,7 @@
 //     The plugin's copies only surface where nothing else provides the name.
 //  3. apply() is safe to mount twice in one process: the provider name is
 //     registered once; a second registration attempt only warns.
-import { existsSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { access, readdir, stat } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -29,6 +30,11 @@ const PACKAGE_ROOT = fileURLToPath(new URL('.', import.meta.url))
 /** Below every standard root rank — the plugin copy only wins when nothing else provides the skill. */
 export const FALLBACK_RANK = 700
 export const PROVIDER_SOURCE = 'plugin:agent-useful-skills'
+
+/** Default skills the bundle registers. Everything else remains in the repo as archived/optional. */
+export const DEFAULT_SKILL_NAMES = JSON.parse(
+  readFileSync(join(PACKAGE_ROOT, 'skills.manifest.json'), 'utf8'),
+).default
 
 /** Skill base roots inside the installed package: `skills/` plus every plugin's nested `skills/` folder. */
 export function repoSkillBases(packageRoot = PACKAGE_ROOT) {
@@ -141,6 +147,7 @@ export class AgentUsefulSkillsProvider extends FileSystemSkillProvider {
     const complete = Array.isArray(output) ? true : output.complete
     const existing = await existingSkillNames(options.cwd)
     const visible = candidates
+      .filter((candidate) => DEFAULT_SKILL_NAMES.includes(candidate.name))
       .filter((candidate) => !existing.has(candidate.name))
       .map((candidate) => ({
         ...candidate,
