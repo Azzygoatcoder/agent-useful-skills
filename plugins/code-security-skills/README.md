@@ -1,6 +1,6 @@
 # Code Security Skills
 
-> Claude Code 插件 — 系统化代码安全审计技能集，覆盖漏洞发现、验证、报告、修复、重审计全流程。**v1.4.0**
+> Claude Code 插件 — 系统化代码安全审计技能集，覆盖漏洞发现、验证、报告、修复、重审计全流程。**v1.4.1**
 
 ![审计 skill v1.4 工作流](assets/audit-workflow-v14.svg)
 
@@ -216,6 +216,7 @@ flowchart LR
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| **1.4.1** | 2026-08-30 | SKILL.md 详细阶段拆到 references/audit-workflow.md，主文件瘦身；description 去掉流程摘要 |
 | **1.4.0** | 2026-08-12 | 场景判定表四路分流；review.py 跨模型对抗验证进 Phase 2；security-audit-tools.py 脚本化状态追踪（mark-*/status/diff-filter） |
 | **1.3.0** | 2026-06-21 | FABLE-5 风格指令重写：Pre-Flight Gate、Confidence 标注、Self-Check Gate、严重性动作绑定、Meta-Cognition Trap |
 | **1.2.0** | 2026-06-19 | Step 0 自动 diff 变更文件、单 Agent 并行失败兜底、Agent C 依赖冲突/CVE 检查 |

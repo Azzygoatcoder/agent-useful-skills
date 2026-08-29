@@ -1,6 +1,6 @@
 # Dev Workflow
 
-Git 协作与发布技能集合：提 PR、发版本、issue、code review。
+> **v1.0.1** — Git 协作与发布技能集合：提 PR、发版本、issue、code review。
 
 ## Skills
 
@@ -23,3 +23,10 @@ Git 协作与发布技能集合：提 PR、发版本、issue、code review。
 ## 协作流全景
 
 PR / release / issue / review 四个协作流已覆盖。剩余：GitHub Discussion（无专用 gh 命令）、CI 自动化（release 后自动跑测试）暂缓。
+
+## 版本历史
+
+| 版本 | 日期 | 变更 |
+| ---- | ---- | ---- |
+| 1.0.1 | 2026-08-30 | review-skill 去除对归档流程 skill 的依赖，description 精简 |
+| 1.0.0 | 2026-08-13 | 初始：pr / release / issue / review 四技能，push 权限判定 |

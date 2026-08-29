@@ -41,7 +41,8 @@ agent-useful-skills/
 
 | 插件 | 版本 | 说明 |
 |------|------|------|
-| [Code Security Skills](plugins/code-security-skills/) | v1.4.0 | 系统化安全审计：场景分流 → 并行探索 → 深度验证（跨模型对抗）→ 报告 → 增量重审计 + 状态追踪工具 |
+| [Code Security Skills](plugins/code-security-skills/) | v1.4.1 | 系统化安全审计：场景分流 → 并行探索 → 深度验证（跨模型对抗）→ 报告 → 增量重审计 + 状态追踪工具 |
+| [Dev Workflow](plugins/dev-workflow/) | v1.0.1 | Git 协作与发布：issue / PR / release / review |
 | [Superpowers（本地改版）](plugins/superpowers/) | 6.2.0-local | superpowers fork + 科研骨架自定义 skill |
 
 ### 自定义 Skills（`plugins/superpowers/skills/`）

@@ -12,8 +12,8 @@ monorepo 两层版本，分开管。
 
 | 插件 | 当前版本 | 说明 |
 |------|---------|------|
-| code-security-skills | 1.4.0 | `claude plugins install` 更新追踪，独立 semver |
-| dev-workflow | 1.0.0 | 同上 |
+| code-security-skills | 1.4.1 | `claude plugins install` 更新追踪，独立 semver |
+| dev-workflow | 1.0.1 | 同上 |
 | superpowers | —（fork） | junction 加载，不独立发版；「6.2.0-local」是上游基线标识 |
 
 - bump 时机：该插件 skills 变化时（加 skill / 大改 = minor，修 bug / 小改 = patch）
