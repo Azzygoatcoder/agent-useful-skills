@@ -72,9 +72,20 @@ $dups = $names | Group-Object | Where-Object Count -gt 1
 if ($dups) {
   Write-Warning "存在同名技能（会互相覆盖）: $(($dups | ForEach-Object Name) -join ', ')"
 }
-New-Item -ItemType Directory -Force -Path $target | Out-Null
+# -Check 是只读模式：目标目录不存在时不创建（否则"只读校验"会留下副作用）
+if ($Check) {
+  if (-not (Test-Path $target)) {
+    Write-Host "✗ 技能目录不存在：$target"
+    Write-Host "  校验失败：0 个技能已部署（去掉 -Check 执行部署）"
+    exit 1
+  }
+} else {
+  New-Item -ItemType Directory -Force -Path $target | Out-Null
+}
 
 $issues = @()
+$issues = @()     # 真失败：会让校验 exit 1
+$notes  = @()     # 信息性跳过：不在管理范围，不算失败
 foreach ($src in $sources) {
   $name = $src.Name
   $dest = Join-Path $target $name
@@ -84,10 +95,10 @@ foreach ($src in $sources) {
       $linkTarget = if ($item.Target) { [System.IO.Path]::GetFullPath($item.Target) } else { '' }
       $inRepo = $linkTarget.StartsWith($repoRoot, [System.StringComparison]::OrdinalIgnoreCase)
       if (-not $inRepo) {
-        $issues += "[跳过] $dest 是指向仓库外的链接，不动"
+        $notes += "[跳过] $dest 是指向仓库外的链接，不动"
       }
     } else {
-      $issues += "[跳过] $dest 是真实目录（不在管理范围，请手动处理）"
+      $notes += "[跳过] $dest 是真实目录（不在管理范围，请手动处理）"
     }
   } else {
     if ($Check) { $issues += "[缺失] $name" }
@@ -112,6 +123,7 @@ if (Test-Path $target) {
 
 if ($Check) {
   foreach ($src in $sources) { Test-Frontmatter $src.FullName ([ref]$issues) }
+  foreach ($n in $notes) { Write-Host "· $n" }
   if ($issues.Count -gt 0) {
     $issues | ForEach-Object { Write-Host "✗ $_" }
     Write-Host "校验失败：$($issues.Count) 个问题（技能数 $($sources.Count)）"
@@ -120,5 +132,6 @@ if ($Check) {
   Write-Host "✓ 全部通过：$($sources.Count) 个技能链接完好，frontmatter 合规"
   exit 0
 }
+foreach ($n in $notes) { Write-Host "· $n" }
 
 exit 0

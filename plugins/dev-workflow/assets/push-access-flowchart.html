@@ -18,7 +18,7 @@
 <div class="wrap">
   <p class="eyebrow">Dev Workflow · 共用判据</p>
   <h1>你有 push 权限吗？</h1>
-  <p class="sub">`git remote -v` 看 origin 是权威仓库还是你的 fork —— 决定 release 走 A 直推还是 B fork-PR。</p>
+  <p class="sub">判据用权限而非 remote 名：`gh api repos/{owner}/{repo} --jq .permissions.push` —— true 走 A 直推，false 走 B fork-PR。（`origin` = 你 clone 的那份，`upstream` = 权威仓库）</p>
 
   <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="push 权限判定流程图">
     <defs>

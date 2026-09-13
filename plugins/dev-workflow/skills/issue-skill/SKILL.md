@@ -35,18 +35,28 @@ gh issue edit <N> --add-label "bug" --add-assignee @me
 
 ```bash
 gh issue comment <N> --body "..."
-gh issue close <N> --reason completed   # 或 not-planned
+gh issue close <N> --reason completed        # 或 --reason "not planned" / --reason duplicate
+gh issue close <N> --reason "not planned"    # 注意是带空格的值，不是 not-planned
 ```
+
+> `--reason` 的合法值只有 `completed` / `not planned` / `duplicate`（gh 2.92 实测：写成 `not-planned` 会被客户端直接拒绝）。判为重复时用 `--reason duplicate`，可另加 `--duplicate-of <N>` 指向原 issue。
 
 ## 场景 D：issue → PR 闭环
 
-1. `gh issue develop <N>`（自动建分支 + checkout，需 gh 较新版本；不支持则手建 `fix/<N>-...`）
+1. **建分支 + checkout**：
+   ```bash
+   gh issue develop <N> --checkout                        # 对权威仓库有写权限时
+   gh issue develop <N> --checkout --branch-repo <你的fork>  # contributor：分支建在自己的 fork 上
+   ```
+   - 注意两点：`--checkout` 不是默认行为；分支建在**远端**仓库上，所以 contributor 必须给 `--branch-repo`，否则会因无写权限失败
+   - 都不支持时手建：`git checkout -b fix/<N>-<简述>`
 2. 改代码 → commit
-3. PR 标题/正文引用 `fixes #N`（合并自动关 issue）
-4. 提 PR 走 pr-skill（角色判据：owner 直推 / contributor fork）
+3. **PR 正文**写 `fixes #N`（必要时也写进 commit message），**别只放在标题**——GitHub 按 PR 描述/commit message 关联并自动关闭；标题单独写不保证生效。另注意：只有合入「拥有该 issue 的仓库的默认分支」才会自动关闭（fork 流程下尤其要确认 base）
+4. 提 PR 走 pr-skill（角色判据见插件 README「共用判据」）
 
 ## 自进化日志
 
 | 日期 | 学习来源 | 吸收的模式 |
 |------|---------|-----------|
 | 2026-08-13 | 协作流梳理（pr/release 之后补 issue） | issue 角色无关（谁都能提），但 B/C 分诊处理是 maintainer 专属；D 闭环复用 pr-skill 的 push 权限判据；`fixes #N` 让 PR 合并自动关 issue |
+| 2026-09-12 | gh 实测校对 | 三处按 gh 2.92 实测修正：①`--reason not-planned` 是非法值（客户端直接拒绝），应为 `--reason "not planned"`，并补 `duplicate` + `--duplicate-of`；②`gh issue develop` 不会自动 checkout（需 `--checkout`），且分支建在远端仓库上，contributor 必须加 `--branch-repo` 否则因无写权限失败；③`fixes #N` 应在 PR **正文**/commit message（GitHub 只文档化这两条路径，标题单独写不保证生效），并补充「必须合入拥有该 issue 的仓库默认分支」这一前提 |

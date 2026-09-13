@@ -15,6 +15,9 @@ security_audit_tools.py — 安全审计报告状态管理（审计 skill 的脚
 
 解析 SECURITY_AUDIT.md 里的 <!-- AUDIT:STATUS=... --> 注解；mark-* 直接改写注解行
 （避免 Edit 工具 Unicode/空白匹配摩擦）。diff-filter 用 git diff 只列变更文件涉及的 findings。
+
+注解字段：STATUS / SEVERITY / FILE / LINES / COMMIT（可选）/ REASON（可选，mark-deferred 写入，
+用 `--reason "文本"` 提供；原因里的双引号会被换成单引号以保持注解可解析）。
 """
 
 import argparse, json, os, re, subprocess, sys
@@ -25,7 +28,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 ANNOT_RE = re.compile(
     r"<!--\s*AUDIT:STATUS=(\w+)\s+SEVERITY=(\w+)\s+FILE=(\S+)\s+LINES=([\d-]+)"
-    r"(?:\s+COMMIT=(\S+))?\s*-->"
+    r"(?:\s+COMMIT=(\S+))?(?:\s+REASON=\"([^\"]*)\")?\s*-->"
 )
 HEADING_RE = re.compile(r"^###\s+([A-Z]+-\d+)(?:\s*[—-]\s*(.*))?$")
 
@@ -75,11 +78,11 @@ def load_report(path):
             continue
         m = ANNOT_RE.search(ln)
         if m and cur_id:
-            status, sev, file_, lines_, commit = m.groups()
+            status, sev, file_, lines_, commit, reason = m.groups()
             findings.append({
                 "id": cur_id, "title": cur_title,
                 "status": status, "severity": sev, "file": file_,
-                "lines": lines_, "commit": commit, "line": i,
+                "lines": lines_, "commit": commit, "reason": reason, "line": i,
             })
             cur_id = cur_title = None
     return findings, lines
@@ -97,7 +100,10 @@ def cmd_list(args):
         print(json.dumps(findings, ensure_ascii=False, indent=2)); return
     for f in findings:
         cmt = f" commit={f['commit']}" if f["commit"] else ""
+        rsn = f"  原因: {f['reason']}" if f.get("reason") else ""
         print(f"{f['id']:10s} {f['status']:10s} {f['severity']:9s} {f['file']}:{f['lines']}  {f['title'][:40]}{cmt}")
+        if rsn:
+            print(rsn)
     print(f"\n共 {len(findings)} 条")
 
 
@@ -155,6 +161,8 @@ def cmd_mark(args, status_field, add_commit=True):
     if missing:
         sys.exit(f"找不到 ID: {', '.join(missing)}。现有: {', '.join(sorted(by_id))}")
     commit = getattr(args, "commit", None) or _git_head()
+    # --reason（mark-deferred 用）：写成 REASON="..." 注解字段，避免"延期原因无处可存"
+    reason = (getattr(args, "reason", None) or "").strip().replace('"', "'")
     changed = []
     for i in args.ids:
         f = by_id[i]
@@ -164,14 +172,17 @@ def cmd_mark(args, status_field, add_commit=True):
                f"LINES={f['lines']}")
         if add_commit and commit:
             new += f" COMMIT={commit}"
+        if reason:
+            new += f' REASON="{reason}"'
         new += " -->"
         lines[f["line"]] = re.sub(r"<!--.*?-->", new, lines[f["line"]], flags=re.S)
-        changed.append((i, f["status"], status_field, commit))
+        changed.append((i, f["status"], status_field, commit, reason))
     with open(path, "w", encoding="utf-8") as fh:
         fh.writelines(lines)
-    for i, old, new, cmt in changed:
+    for i, old, new, cmt, rsn in changed:
         c = f" (commit {cmt})" if cmt else ""
-        print(f"{i}: {old} → {new}{c}")
+        r = f' [reason: "{rsn}"]' if rsn else ""
+        print(f"{i}: {old} → {new}{c}{r}")
     if not changed:
         print("无变更")
 

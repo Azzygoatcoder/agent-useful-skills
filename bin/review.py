@@ -5,6 +5,17 @@ Usage: python review.py <file_path|text> [focus] [--json]
 评审 prompt 改编自 ARIS kill-argument 范式：commit 到单一最强拒绝理由，逼承诺。
 评审者与执行者（deepseek）不同模型 → 跨模型独立性。
 默认人类可读排版；--json 仅输出纯 JSON 供程序消费（自动 gate 用）。
+
+--json 输出形状（gate 可据此判可信度）：
+  {
+    "truncated": false,          # true = 输入超长被截断，结论只覆盖头尾
+    "original_chars": 12345,     # 原始输入字符数
+    "reviewed_chars": 12345,     # 实际送审字符数
+    "max_input_chars": 120000,   # 当前上限
+    "verdict": {...}             # 模型返回的评审结果
+  }
+**自动 gate 必须检查 truncated**：为 true 时评审只看到头 70% + 尾 30%，
+中间被省略，不能当作完整评审结论。
 """
 import sys, os, json
 import llm
@@ -45,6 +56,7 @@ def main():
         src = "直接文本输入"
     if focus:
         content += f"\n\n[重点审查方向] {focus}"
+    original_chars = len(content)
     content, truncated = llm.truncate_text(content)
     if truncated:
         print(f"[warning] 输入超长，已截断到 {llm.MAX_INPUT_CHARS} 字符（保留头尾）", file=sys.stderr)
@@ -58,8 +70,21 @@ def main():
         print("评审失败：模型未返回合法 JSON", file=sys.stderr)
         sys.exit(2)
     if as_json:
-        print(json.dumps(result, ensure_ascii=False, indent=2))
+        # 显式带出截断状态：gate 消费 JSON 时必须能区分「完整评审」与「头尾评审」
+        print(json.dumps({
+            "truncated": truncated,
+            "original_chars": original_chars,
+            "reviewed_chars": len(content),
+            "max_input_chars": llm.MAX_INPUT_CHARS,
+            "verdict": result,
+        }, ensure_ascii=False, indent=2))
+        if truncated:
+            # 非零退出：让自动 gate 无法把截断评审误当通过
+            sys.exit(3)
     else:
+        if truncated:
+            print(f"⚠️ 输入被截断（{original_chars} → {len(content)} 字符），"
+                  f"结论只覆盖头尾，中间内容未被评审", file=sys.stderr)
         _pretty(result)
 
 

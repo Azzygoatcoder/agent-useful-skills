@@ -1,5 +1,11 @@
 ## The Four Phases
 
+> **Scope note (local fork):** this file is the upstream text and states the process unconditionally.
+> The parent `SKILL.md` carries a local **场景判定** table that decides between the full four phases and a
+> lightweight path (个人业余项目 / 低风险探索 / throwaway). **That table takes precedence over the
+> unconditional wording here.** It does *not* excuse skipping root-cause investigation: the lightweight
+> path still requires 稳定复现 → 定位根因 → 验证修复. If you are unsure which applies, use the full four phases.
+
 You MUST complete each phase before proceeding to the next.
 
 ### Phase 1: Root Cause Investigation

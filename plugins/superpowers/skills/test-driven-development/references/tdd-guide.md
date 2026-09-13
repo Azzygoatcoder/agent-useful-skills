@@ -1,5 +1,12 @@
 ## Red-Green-Refactor
 
+> **Scope note (local fork):** this file is the upstream text and states the rules unconditionally —
+> including "All of these mean: Delete code. Start over with TDD." The parent `SKILL.md` carries a local
+> **场景判定** table (完整 TDD / 轻量 TDD / throwaway) and a 适用边界 clause scoping the Iron Law to code
+> that will become **production / persistent** code. **Those take precedence over the unconditional wording
+> here.** The unconditional language below applies once a task has been classified as 生产代码 / 共享库 /
+> 正式项目 / bug 修复. It never excuses shipping unverified code as production.
+
 ```dot
 digraph tdd_cycle {
     rankdir=LR;
