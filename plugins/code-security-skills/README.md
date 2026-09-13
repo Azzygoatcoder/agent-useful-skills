@@ -1,8 +1,10 @@
 # Code Security Skills
 
-> Claude Code 插件 — 系统化代码安全审计技能集，覆盖漏洞发现、验证、报告、修复、重审计全流程。**v1.4.2**
+> Claude Code 插件 — 系统化代码安全审计技能集，覆盖漏洞发现、验证、报告、修复、重审计全流程。**v1.4.3**
 
-![审计 skill v1.4 工作流](assets/audit-workflow-v14.svg)
+![安全审计 skill 工作流](assets/audit-workflow.svg)
+
+<sub>图源 `assets/audit-workflow.html`（单文件内联 SVG），`audit-workflow.svg` / `.png` 由它导出。</sub>
 
 ## 技能概览
 
@@ -218,6 +220,7 @@ flowchart LR
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| **1.4.3** | 2026-09-12 | 工作流图用 diagram-design 重制（`audit-workflow.{html,svg,png}`），替换 v14 三件套：①修图里的**幽灵引用**——分流框原写"单 PR → code-review"，而 `code-review` 是全仓库不存在的技能，改为 `dev-workflow`；②补齐导出规范——旧 `.svg` 缺 `xmlns`，作为 `<img>` 嵌入时不会渲染，且 HTML/SVG 两件是孤儿；现在 HTML 为唯一图源、SVG/PNG 由它导出，README 只引用 SVG |
 | **1.4.2** | 2026-09-12 | 修复：`security-audit-tools` 控制台命令此前从未可用——文件名为连字符，无法作为 `security_audit_tools` 模块导入，导致 `pip install -e .` 整个失败。文件改名为 `bin/security_audit_tools.py`；README 补 monorepo-root 前置说明 |
 | **1.4.1** | 2026-08-30 | SKILL.md 详细阶段拆到 references/audit-workflow.md，主文件瘦身；description 去掉流程摘要 |
 | **1.4.0** | 2026-08-12 | 场景判定表四路分流；review.py 跨模型对抗验证进 Phase 2；security-audit-tools.py 脚本化状态追踪（mark-*/status/diff-filter） |
