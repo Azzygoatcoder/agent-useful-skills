@@ -42,7 +42,7 @@ agent-useful-skills/
 
 | 插件 | 版本 | 说明 |
 |------|------|------|
-| [Code Security Skills](plugins/code-security-skills/) | v1.4.1 | 系统化安全审计：场景分流 → 并行探索 → 深度验证（跨模型对抗）→ 报告 → 增量重审计 + 状态追踪工具 |
+| [Code Security Skills](plugins/code-security-skills/) | v1.4.2 | 系统化安全审计：场景分流 → 并行探索 → 深度验证（跨模型对抗）→ 报告 → 增量重审计 + 状态追踪工具 |
 | [Dev Workflow](plugins/dev-workflow/) | v1.0.1 | Git 协作与发布：issue / PR / release / review |
 | [Superpowers（本地改版）](plugins/superpowers/) | 6.2.0-local | superpowers fork + 科研骨架自定义 skill |
 
@@ -67,11 +67,11 @@ agent-useful-skills/
 |------|------|------|
 | vision.py | 识图（Qwen3-VL-32B，OpenAI 兼容） | `LLM_API_URL` + key（env） |
 | review.py | 跨模型对抗评审（kill-argument 结构化 JSON，Qwen3.5-397B） | `LLM_API_URL` + key（env） |
-| gen-image-mcp.js | 通用生图 MCP server（OpenAI 兼容） | `GEN_IMAGE_URL` / `GEN_IMAGE_PROVIDERS`（env） |
-| office_tools.py | Office 处理（Excel / pandoc md→docx/pptx / 提图） | openpyxl + pandoc |
+| gen-image-mcp.cjs | 通用生图 MCP server（OpenAI 兼容；`.cjs` 因仓库为 ESM） | `GEN_IMAGE_URL` / `GEN_IMAGE_PROVIDERS`（env） |
+| office_tools.py | Office 处理（Excel / pandoc md→docx/pptx / 提图） | openpyxl + pandoc（extras `[office]`） |
 | latex_build.py | LaTeX 模板库管理（new/build/pages） | latexmk + xelatex |
-| data_plot.py | 期刊级数据图（样式 / 数据耦合保存） | matplotlib/pandas/numpy |
-| security-audit-tools.py | 安全审计报告状态管理 | 标准库 |
+| data_plot.py | 期刊级数据图（样式 / 数据耦合保存） | matplotlib/pandas/numpy（extras `[plot]`） |
+| security_audit_tools.py | 安全审计报告状态管理（自动探测报告路径） | 标准库 |
 | fig2drawio.py | 论文图 → draw.io 复刻 | `LLM_API_URL` + key（env） |
 | consistency_check.py | 矢量图一致性检查 | `LLM_API_URL` + key（env） |
 | check_skills.py | 校验全部 SKILL.md 是否符合 DSH/AgentSkills 规则（name/description/单层发现/运行时耦合） | 标准库 |
@@ -114,14 +114,23 @@ New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\paper-reading
 
 ### Helper 脚本
 
-`bin/` 下的脚本可直接 `python bin/<script>.py` 调用，也支持 `pip install -e .` 一键安装为 console 命令（推荐，不依赖 junction）：
+`bin/` 下的脚本可直接 `python bin/<script>.py` 调用，也支持 `pip install -e .` 一键安装为 console 命令（推荐，不依赖 junction）。
+
+核心命令（`review` / `vision` / `check-skills` / `latex-build` / `security-audit-tools` 等）**零第三方依赖**；带可选依赖的能力按用途分组，避免为用一个命令装齐全部重依赖：
 
 ```bash
-pip install -e .
+pip install -e .                 # 核心命令
+pip install -e ".[office]"       # + openpyxl / python-docx / python-pptx / PyMuPDF（Excel、Word、PPT、PDF 提图）
+pip install -e ".[plot]"         # + matplotlib / pandas / numpy（期刊级数据图）
+pip install -e ".[all]"          # 全部
+
 review file.md           # 跨模型对抗评审（结构化 JSON）
 vision img.png "描述"    # 识图
-office-tools md2docx a.md b.docx
+office-tools md2docx a.md b.docx      # md→docx 走 pandoc（无需 extras）
+office-tools extract pdf 论文.pdf --outdir 图/ --min-size 250 --min-kb 5   # 需 [office]
+data-plot demo                        # 需 [plot]
 latex-build list
+security-audit-tools list             # 审计报告状态（自动探测报告路径）
 ```
 
 ### DeepSeek Harness（DSH）接入

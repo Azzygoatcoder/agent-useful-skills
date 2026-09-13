@@ -9,7 +9,13 @@
 //  4. get() 能读出 SKILL.md 正文（与官方解析规则一致）。
 //
 // 运行：node bin/verify-plugin.mjs
-// 依赖：仓库根 node_modules/@deepseek-ai/dsh-skill-filesystem（junction 到 DSH host 或 npm install）
+// 依赖：仓库根 node_modules/@deepseek-ai/dsh-skill-filesystem —— 用 `npm install` 解析
+//   （package.json 声明 ^0.1.1-rc.1）。不要手工建 junction 指向 DSH 运行时的
+//   node_modules：pnpm 的内容寻址 store 目录名带哈希，运行时每次更新哈希就变，
+//   junction 会悬空并让本脚本以 ERR_MODULE_NOT_FOUND 崩掉（2026-09 实际踩过）。
+//   注意：`npm install` 解析到的版本可能低于 DSH 实际运行时版本（例如装到
+//   0.1.1-rc.2 而运行时是 0.1.5-rc.1）。本脚本只验证插件自身的注册/去重契约，
+//   两者 API 兼容即可；若上游改了 Config/list() 形状，需同步核对运行时版本。
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'

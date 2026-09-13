@@ -1,0 +1,51 @@
+# 统一换行符：仓库内文本一律 LF（入库与检出都是 LF）。
+#
+# 为什么需要根级文件：本机 core.autocrlf=true，凡未被 .gitattributes 覆盖的文件
+# 会在检出时被改写成 CRLF。插件自己的 .gitattributes 只覆盖该插件目录，且覆盖不到
+# 无扩展名的脚本 —— SDD 的三个 bash 帮助脚本因此变成 CRLF 而无法执行
+# （set -euo pipefail\r → "pipefail\r: invalid option name"）。
+# 规则按 git 的「后匹配优先」语义排列，具体规则放最后。
+
+# 兜底：文本文件统一 LF
+* text=auto eol=lf
+
+# 无扩展名的 bash 脚本（SDD 帮助脚本等）
+skills/*/scripts/* text eol=lf
+plugins/*/skills/*/scripts/* text eol=lf
+
+# hooks 与 polyglot 包装（钩子目录内既有 bash 也有 cmd 包装）
+plugins/*/hooks/* text eol=lf
+
+# 显式声明的脚本类型
+*.sh    text eol=lf
+*.bash  text eol=lf
+*.cmd   text eol=lf
+*.ps1   text eol=lf
+*.py    text eol=lf
+*.js    text eol=lf
+*.mjs   text eol=lf
+*.cjs   text eol=lf
+*.ts    text eol=lf
+*.json  text eol=lf
+*.md    text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.toml  text eol=lf
+*.tex   text eol=lf
+*.bib   text eol=lf
+*.svg   text eol=lf
+*.html  text eol=lf
+*.css   text eol=lf
+*.drawio text eol=lf
+
+# 二进制：不要做任何换行转换
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.docx binary
+*.pptx binary
+*.xlsx binary
+*.tgz  binary

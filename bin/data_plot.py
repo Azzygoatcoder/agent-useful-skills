@@ -6,8 +6,9 @@ data_plot.py — 科研骨架数据图模块（精确数据图，代码驱动）
 
 用法:
   绘图脚本里 import:
-    from data_plot import pub_style, save_fig, okabe_ito
+    from data_plot import pub_style, save_fig, OKABE_ITO
     pub_style(col="single")                    # 期刊样式（单栏 3.3in / 双栏 6.8in）
+    import matplotlib.pyplot as plt            # 绘图库由本模块不强制安装，自行 import
     fig, ax = plt.subplots()
     ...
     save_fig(fig, "result", data=df)           # pdf矢量 + png 300dpi + csv 数据耦合
@@ -27,9 +28,9 @@ import argparse
 import os
 import sys
 
-import numpy as np
-
-sys.stdout.reconfigure(encoding="utf-8")
+# 仅在真实终端流上重配置（被 import 或 stdout 被替换时不炸）
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 # ── 色盲安全色板（Okabe-Ito）──
 OKABE_ITO = ["#E69F00", "#56B4E9", "#009E73", "#F0E442",
@@ -90,6 +91,7 @@ def save_fig(fig, name, data=None, figdir="figures", dpi=300):
 def demo():
     """生成演示图（带误差棒的折线）测试环境。"""
     import matplotlib.pyplot as plt
+    import numpy as np
     import pandas as pd
     rng = np.random.default_rng(42)
     x = np.arange(1, 8)
@@ -120,7 +122,7 @@ def cmd_list():
     print("样式:  pub_style(col='single'|'double')")
     print("      单栏 3.3in / 双栏 6.8in, 8pt 基准, Okabe-Ito 色盲安全, 300dpi")
     print("保存:  save_fig(fig, name, data=df) → pdf+png+csv 数据耦合")
-    print("色板:  okabe_ito 列表 (8 色, 色盲安全)")
+    print("色板:  OKABE_ITO 列表 (8 色, 色盲安全)")
     print("\n工作流: 数据(xlsx/csv) → pandas 读入 → matplotlib 脚本 → 执行循环\n"
           "        → vision.py 渲染检查 → PDF+PNG 双出 → 投稿前可升 PGFPlots")
 

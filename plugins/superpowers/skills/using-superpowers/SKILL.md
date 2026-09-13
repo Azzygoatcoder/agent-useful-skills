@@ -41,9 +41,11 @@ If the check comes back no, proceed without it. The point is noticing, not guilt
 
 If your harness appears here, read its reference file for special instructions:
 
+- **DeepSeek Harness (DSH): `references/dsh-tools.md`** — tool-name mapping (subagent / pwsh / grep / web_search / mcp__*) and how relative paths resolve against the skill base directory
 - Codex: `references/codex-tools.md`
 - Pi: `references/pi-tools.md`
 - Antigravity: `references/antigravity-tools.md`
+- Gemini CLI: `references/gemini-tools.md`
 
 ## User Instructions
 

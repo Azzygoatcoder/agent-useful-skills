@@ -98,3 +98,9 @@ Quick reference:
 ### SSRF-1 — tool_fetch_url navigates to unvalidated URL
 <!-- AUDIT:STATUS=open SEVERITY=high FILE=your-project/src/module.py LINES=100-120 -->
 ```
+
+## 自进化日志
+
+| 日期 | 学习来源 | 吸收的模式 |
+|------|---------|-----------|
+| 2026-09-12 | 状态工具可达性修复 | 脚本此前因文件名连字符无法作为模块导入，`security-audit-tools` 从未真正可用；已改名 `bin/security_audit_tools.py`，并把报告路径改为自动探测（cwd 的 `docs/` → 仓库根 → 本插件 `docs/`），缺报告时退出码 2 而非抛 traceback |

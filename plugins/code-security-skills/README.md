@@ -1,6 +1,6 @@
 # Code Security Skills
 
-> Claude Code 插件 — 系统化代码安全审计技能集，覆盖漏洞发现、验证、报告、修复、重审计全流程。**v1.4.1**
+> Claude Code 插件 — 系统化代码安全审计技能集，覆盖漏洞发现、验证、报告、修复、重审计全流程。**v1.4.2**
 
 ![审计 skill v1.4 工作流](assets/audit-workflow-v14.svg)
 
@@ -73,9 +73,11 @@ Phase 4 不再全量重读所有文件。通过 `git diff <audit-commit>..HEAD` 
 
 Phase 2 加 review.py（ARIS 对抗范式，不同模型）攻击 findings——自动化解决 30-40% 误报全靠人工判断的瓶颈。被对抗模型批倒且无反驳依据的 finding 必须重新验证。
 
-### 脚本化状态追踪：`bin/security-audit-tools.py`
+### 脚本化状态追踪：`bin/security_audit_tools.py`
 
 不再手动 grep/Edit 注解，状态管理脚本化（对齐 arxiv_fetch/latex_build 模式）：
+
+> **前置**：脚本在 monorepo 根 `bin/`，不在本插件目录内。先 `pip install -e .`（控制台命令），或从仓库根用 `python bin/security_audit_tools.py <子命令>`。
 
 ```bash
 security-audit-tools list [--status open] [--severity high]
@@ -216,6 +218,7 @@ flowchart LR
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| **1.4.2** | 2026-09-12 | 修复：`security-audit-tools` 控制台命令此前从未可用——文件名为连字符，无法作为 `security_audit_tools` 模块导入，导致 `pip install -e .` 整个失败。文件改名为 `bin/security_audit_tools.py`；README 补 monorepo-root 前置说明 |
 | **1.4.1** | 2026-08-30 | SKILL.md 详细阶段拆到 references/audit-workflow.md，主文件瘦身；description 去掉流程摘要 |
 | **1.4.0** | 2026-08-12 | 场景判定表四路分流；review.py 跨模型对抗验证进 Phase 2；security-audit-tools.py 脚本化状态追踪（mark-*/status/diff-filter） |
 | **1.3.0** | 2026-06-21 | FABLE-5 风格指令重写：Pre-Flight Gate、Confidence 标注、Self-Check Gate、严重性动作绑定、Meta-Cognition Trap |
@@ -226,4 +229,4 @@ flowchart LR
 
 ## 许可证
 
-[MIT](LICENSE)
+[MIT](../../LICENSE)

@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-// gen-image-mcp.js — 零依赖 MCP 服务器，通用 OpenAI 兼容生图（/v1/images/generations）
+// gen-image-mcp.cjs — 零依赖 MCP 服务器，通用 OpenAI 兼容生图（/v1/images/generations）
+// 扩展名必须是 .cjs：本仓库 package.json 有 "type": "module"，.js 会被当作 ESM 而
+// 本文件用 require()（CommonJS），改回 .js 会直接抛 "require is not defined"。
 // 端点配置全部来自环境变量，不硬编码任何供应商。
 //
 //   单端点（命名为 default）:

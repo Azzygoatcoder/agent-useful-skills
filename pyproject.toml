@@ -8,6 +8,30 @@ version = "1.2.1"
 description = "模块化 AI 科研/工程技能 monorepo（Claude Code / DeepSeek Harness 通用）"
 requires-python = ">=3.9"
 
+[project.optional-dependencies]
+# 核心命令（review / vision / check-skills / latex-build 等）零第三方依赖；
+# 可选能力按用途分组，避免为用一个命令装齐全部重依赖。
+office = [
+    "openpyxl>=3.1",
+    "python-docx>=1.1",
+    "python-pptx>=1.0",
+    "PyMuPDF>=1.24",
+]
+plot = [
+    "matplotlib>=3.7",
+    "pandas>=2.0",
+    "numpy>=1.24",
+]
+all = [
+    "openpyxl>=3.1",
+    "python-docx>=1.1",
+    "python-pptx>=1.0",
+    "PyMuPDF>=1.24",
+    "matplotlib>=3.7",
+    "pandas>=2.0",
+    "numpy>=1.24",
+]
+
 [project.scripts]
 review = "review:main"
 vision = "vision:main"

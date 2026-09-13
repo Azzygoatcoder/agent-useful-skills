@@ -24,18 +24,23 @@ md→docx/pptx 走 pandoc: LaTeX 公式($..$)→Word/PPT 原生 OMML 方程; --r
 """
 
 import argparse, csv, os, re, shutil, subprocess, sys
-from openpyxl import Workbook, load_workbook
 
-sys.stdout.reconfigure(encoding="utf-8")
+# 仅在真实终端流上重配置（被 import 或 stdout 被替换时不炸）
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
+# openpyxl 不在此处 import：它是可选依赖，模块级导入会让 `--help` 在未装时直接崩。
 
 
 # ---------- 读取 ----------
 
 def list_sheets(path):
+    from openpyxl import load_workbook
     return load_workbook(path, read_only=True).sheetnames
 
 
 def read_sheet(path, sheet=None, head=0):
+    from openpyxl import load_workbook
     wb = load_workbook(path, data_only=True)
     if sheet is None:
         sheet = wb.sheetnames[0]
@@ -87,6 +92,7 @@ def cmd_md2xlsx(args):
     if not tables:
         print("未找到 markdown 表格"); return
     sel = list(range(len(tables))) if args.table == "all" else [int(t) for t in args.table.split(",")]
+    from openpyxl import Workbook
     wb = Workbook()
     wb.remove(wb.active)
     for i in sel:
@@ -137,6 +143,7 @@ def cmd_stats(args):
 
 
 def cmd_csv2xlsx(args):
+    from openpyxl import Workbook
     wb = Workbook()
     ws = wb.active
     with open(args.csv, encoding="utf-8", newline="") as f:
@@ -198,7 +205,7 @@ def cmd_md2pptx(args):
 def cmd_extract(args):
     os.makedirs(args.outdir, exist_ok=True)
     if args.fmt == "pdf":
-        extract_pdf(args.path, args.outdir, args.pages)
+        extract_pdf(args.path, args.outdir, args.pages, args.min_size, args.min_kb)
     elif args.fmt == "docx":
         extract_docx(args.path, args.outdir)
     else:

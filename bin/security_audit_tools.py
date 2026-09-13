@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-security-audit-tools.py — 安全审计报告状态管理（审计 skill 的脚本工具）
+security_audit_tools.py — 安全审计报告状态管理（审计 skill 的脚本工具）
 科研骨架审计模块 | 依赖: 标准库
 
 用法:
-  python security-audit-tools.py list [--status open|fixed|deferred|not-fixed|partial] [--severity critical|high|medium|low] [--json]
-  python security-audit-tools.py status [--report docs/SECURITY_AUDIT.md]
-  python security-audit-tools.py diff-filter --commit <hash> [--report ...]
-  python security-audit-tools.py mark-fixed SSRF-1 PATH-1 [--commit <hash>] [--report ...]
-  python security-audit-tools.py mark-deferred SSRF-1 [--reason "文本"] [--report ...]
+  python security_audit_tools.py list [--status open|fixed|deferred|not-fixed|partial] [--severity critical|high|medium|low] [--json]
+  python security_audit_tools.py status [--report <SECURITY_AUDIT.md 路径>]
+  python security_audit_tools.py diff-filter --commit <hash> [--report ...]
+  python security_audit_tools.py mark-fixed SSRF-1 PATH-1 [--commit <hash>] [--report ...]
+  python security_audit_tools.py mark-deferred SSRF-1 [--reason "文本"] [--report ...]
+
+--report 缺省自动探测：cwd 的 docs/SECURITY_AUDIT.md → cwd 根 → 本仓库插件 docs/。
 
 解析 SECURITY_AUDIT.md 里的 <!-- AUDIT:STATUS=... --> 注解；mark-* 直接改写注解行
 （避免 Edit 工具 Unicode/空白匹配摩擦）。diff-filter 用 git diff 只列变更文件涉及的 findings。
 """
 
-import argparse, json, re, subprocess, sys
+import argparse, json, os, re, subprocess, sys
 
-sys.stdout.reconfigure(encoding="utf-8")
+# 仅在真实终端流上重配置（被 import 或 stdout 被替换时不炸）
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 ANNOT_RE = re.compile(
     r"<!--\s*AUDIT:STATUS=(\w+)\s+SEVERITY=(\w+)\s+FILE=(\S+)\s+LINES=([\d-]+)"
@@ -26,9 +30,41 @@ ANNOT_RE = re.compile(
 HEADING_RE = re.compile(r"^###\s+([A-Z]+-\d+)(?:\s*[—-]\s*(.*))?$")
 
 
+def resolve_report(args_report):
+    """定位 SECURITY_AUDIT.md。
+
+    显式 --report 优先。否则按顺序探测：cwd 下的 docs/ 与根目录，
+    再回退到本仓库插件的规范位置 <repo-root>/plugins/code-security-skills/docs/。
+    探测不到时返回首选候选（交给 load_report 报清晰错误），而不是抛 FileNotFoundError。
+    """
+    if args_report:
+        candidates = [args_report]
+        if os.path.isfile(args_report):
+            return args_report
+    else:
+        here = os.path.dirname(os.path.abspath(__file__))
+        repo_root = os.path.dirname(here)
+        candidates = [
+            os.path.join("docs", "SECURITY_AUDIT.md"),
+            "SECURITY_AUDIT.md",
+            os.path.join(repo_root, "plugins", "code-security-skills",
+                         "docs", "SECURITY_AUDIT.md"),
+        ]
+        for cand in candidates:
+            if os.path.isfile(cand):
+                return cand
+        return candidates[0]
+    return candidates[0]
+
+
 def load_report(path):
     """返回 [(id, title, {status,severity,file,lines,commit}, line_idx)]"""
     findings = []
+    if not os.path.isfile(path):
+        print(f"找不到审计报告：{path}", file=sys.stderr)
+        print("用 --report <路径> 显式指定（例如 "
+              "--report plugins/code-security-skills/docs/SECURITY_AUDIT.md）", file=sys.stderr)
+        raise SystemExit(2)
     with open(path, encoding="utf-8") as f:
         lines = f.readlines()
     cur_id = cur_title = None
@@ -47,10 +83,6 @@ def load_report(path):
             })
             cur_id = cur_title = None
     return findings, lines
-
-
-def resolve_report(args_report):
-    return args_report or "docs/SECURITY_AUDIT.md"
 
 
 def cmd_list(args):
@@ -156,7 +188,7 @@ def main():
     p = argparse.ArgumentParser(description="安全审计报告状态管理")
     sub = p.add_subparsers(dest="cmd", required=True)
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--report", help="报告路径（默认 docs/SECURITY_AUDIT.md）")
+    common.add_argument("--report", help="报告路径（缺省自动探测 docs/、仓库根、本仓库插件 docs/）")
 
     l = sub.add_parser("list", parents=[common], help="列出 findings（可按状态/严重度过滤）")
     l.add_argument("--status"); l.add_argument("--severity"); l.add_argument("--json", action="store_true")

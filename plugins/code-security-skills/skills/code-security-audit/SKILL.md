@@ -18,7 +18,7 @@ Systematic security audit of any codebase using parallel domain exploration. Lau
 | 快速风险扫描 | "/audit quick" / "快扫一眼" | L1 | 一页风险概览（不看全文） | Phase 1 单 agent + 摘要，跳过 Self-Check |
 | **全面审计（默认）** | "audit this repo" / "安全审计" / "/audit" | L2-L3 | 完整 SECURITY_AUDIT.md | Phase 1-3 全流程 |
 | 增量重审 | "/reaudit" / "检查修复" | 变更文件 | 重审段 + 状态更新 | Phase 4 |
-| 单 PR / 单文件 | "review this PR" / "看下这个改动" | — | 代码评审 | 委托 code-review，不进安全审计 |
+| 单 PR / 单文件 | "review this PR" / "看下这个改动" | — | 代码评审 | 走 `review-skill`（自带代码评审清单），不进安全审计 |
 | 快速修复 | "/security-fix" / "修漏洞" | — | 按 P1-P4 批量修复 | security-fix-skill |
 
 > 默认是**全面审计**。用户要求"快扫/quick"才降级 L1；"修漏洞/再审计"分别走 security-fix / reaudit。场景不清时按全面审计走，深度宁高勿低。
@@ -43,9 +43,9 @@ Trigger when the user asks to:
 - Find vulnerabilities before a release or deployment
 
 Do NOT use for:
-- Reviewing a single PR diff (use `/security-review` or manual review)
+- Reviewing a single PR diff (use `review-skill`)
 - Checking one specific function for bugs (use systematic-debugging)
-- General code review for style/architecture (use `/code-review`)
+- General code review for style/architecture (use `review-skill`, which ships its own code-review checklist)
 
 ## Audit Workflow
 

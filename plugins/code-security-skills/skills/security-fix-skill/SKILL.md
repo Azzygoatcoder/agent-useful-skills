@@ -114,3 +114,9 @@ files.
 - **Re-audit after fixes**: run `/reaudit status` to confirm all findings are
   resolved. The status annotations (`<!-- AUDIT:STATUS=... -->`) track fix state
   per finding, eliminating the need to manually update line numbers in the report.
+
+## 自进化日志
+
+| 日期 | 学习来源 | 吸收的模式 |
+|------|---------|-----------|
+| 2026-09-12 | DSH 技能清单审计 | 本技能是四个审计技能里唯一缺 `## 自进化日志` 的（audit / reaudit 同批补上）；同时确认 `pip install -e .` 的 console 入口只在脚本可导入时才生效，修完 `security_audit_tools` 后 `/security-fix` 的状态追踪才真正可用 |

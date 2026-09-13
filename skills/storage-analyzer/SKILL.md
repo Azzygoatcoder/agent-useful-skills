@@ -16,7 +16,7 @@ description: >
 
 # Storage Analyzer
 
-> **来源**: 改编自 [KKKKhazix/khazix-skills](https://github.com/KKKKhazix/khazix-skills) 的 storage-analyzer（MIT）。本仓库做了 Windows 实测与本地化修复，详见根目录 [THIRD-PARTY-NOTICES.md](../../../THIRD-PARTY-NOTICES.md)。
+> **来源**: 改编自 [KKKKhazix/khazix-skills](https://github.com/KKKKhazix/khazix-skills) 的 storage-analyzer（MIT）。本仓库做了 Windows 实测与本地化修复，详见根目录 [THIRD-PARTY-NOTICES.md](../../THIRD-PARTY-NOTICES.md)。
 
 对 macOS 做一次只读存储分析，产出交互式 HTML 报告。流程：扫描 → 分析分级 → 生成网页 → 打开。
 
