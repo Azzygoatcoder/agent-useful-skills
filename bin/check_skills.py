@@ -390,8 +390,9 @@ def check_diagrams(root: Path):
     try:
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         from export_diagram import build_svg  # 复用同一份导出逻辑，避免两处漂移
-    except Exception as exc:  # pragma: no cover
-        return [f"无法加载 export_diagram.py（配图一致性校验跳过）：{exc}"]
+    except Exception as exc:
+        # 不能静默降级：否则这条检查会在 CI 里"看起来通过"却什么都没查
+        return [f"无法加载 bin/export_diagram.py，配图一致性无法校验：{exc}"]
 
     sources = sorted(p for p in root.rglob("assets/*.html") if "archive" not in p.parts)
     for html in sources:

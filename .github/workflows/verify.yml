@@ -1,0 +1,78 @@
+name: verify
+
+# 本仓库的门禁此前全靠手工跑；已经证明它们能抓真问题
+# （校验器抓过版本失配与配图漂移），所以固化成 CI。
+# 全部检查都是离线的：不调用任何 LLM/MCP 端点，不需要密钥。
+
+"on":
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: verify (${{ matrix.os }} / py${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        # 3.9 = pyproject 声明的 requires-python 下限；3.11 = 本机开发版本。
+        # 声明了下限就该被真实检验，否则那个声明没有意义。
+        python: ["3.9", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 语法检查（按 matrix 的 Python 版本编译全部脚本）
+        shell: bash
+        run: python -m compileall -q bin tests
+
+      - name: 技能校验器（DSH frontmatter 契约 / 清单 / 交叉引用 / 配图漂移）
+        shell: bash
+        run: python bin/check_skills.py --strict
+
+      - name: bin 契约离线自测（review 截断 / 审计状态 --reason 往返）
+        shell: bash
+        run: python tests/test_bin_contracts.py
+
+      - name: 解析插件依赖（verify-plugin 需要 dsh-skill-filesystem）
+        shell: bash
+        run: npm install --no-audit --no-fund
+
+      - name: 插件白盒自检（注册契约 / 去重 / 候选形状）
+        shell: bash
+        run: node bin/verify-plugin.mjs
+
+      - name: 配图派生一致性（HTML 图源 → SVG 是否同步）
+        shell: bash
+        run: |
+          python bin/export_diagram.py --check \
+            plugins/code-security-skills/assets/audit-workflow.html \
+            plugins/dev-workflow/assets/push-access-flowchart.html
+
+      - name: 部署/自愈校验
+        shell: pwsh
+        run: |
+          # CI 是全新环境，先造一个含 junction/symlink 的 DSH_HOME，
+          # 再让 -Check 校验它——这样也顺带验证了部署逻辑本身
+          $dshHome = Join-Path $env:RUNNER_TEMP "dsh-home"
+          python tests/make_dsh_home.py $dshHome
+          $env:DSH_HOME = $dshHome
+          pwsh -NoProfile -File bin/redeploy-skills.ps1 -Check

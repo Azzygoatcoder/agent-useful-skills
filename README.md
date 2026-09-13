@@ -164,6 +164,28 @@ dsh plugin --profile web add github:Azzygoatcoder/agent-useful-skills
 - **归档默认不注册（15）**：`brainstorming`、`writing-plans`、`dispatching-parallel-agents`、`finishing-a-development-branch`、`using-git-worktrees`、`requesting-code-review`、`receiving-code-review`、`writing-skills`、`self-evolve`（原 meta/流程类）；以及合并掉的 `audit`、`reaudit`（→ `code-security-audit`）、`issue-skill`、`pr-skill`、`release-skill`、`review-skill`（→ `dev-workflow`）。目录都在 `archive/`，每个附 `README.md` 说明合并原因与原件，如需要可在 `skills.manifest.json` 中加回
 - 白盒自检：`node bin/verify-plugin.mjs`（需仓库根 `node_modules/@deepseek-ai/dsh-skill-filesystem` 可解析，见 `verify-plugin.mjs` 头部注释）
 
+## CI（`.github/workflows/verify.yml`）
+
+上面这些门禁在 CI 上自动跑，**四个组合**：`ubuntu` / `windows` × Python `3.9` / `3.11`。
+（3.9 是 `pyproject.toml` 声明的 `requires-python` 下限——声明了下限就该被真实检验。）
+
+每一步都能在本地原样复现，且**全部离线**（不调 LLM/MCP，不需要密钥）：
+
+```bash
+python -m compileall -q bin tests              # 语法（按 matrix 的 Python 版本）
+python bin/check_skills.py --strict            # DSH 契约 / 清单 / 交叉引用 / 插件版本 / 配图漂移
+python tests/test_bin_contracts.py             # review 截断契约 + 审计 --reason 往返
+npm install --no-audit --no-fund
+node bin/verify-plugin.mjs                     # 注册契约 / 去重 / 候选形状
+python bin/export_diagram.py --check <图源.html> ...   # 配图派生是否同步
+pwsh bin/redeploy-skills.ps1 -Check            # 部署完整性（CI 先造 DSH_HOME，见 tests/make_dsh_home.py）
+```
+
+本地一次跑完：`python tests/test_bin_contracts.py && python bin/check_skills.py --strict`。
+
+> `tests/` 下是**离线可跑的契约测试**——凡是能用 stub 替掉网络调用的行为契约都放这里，
+> 这样可以进 CI；需要真调模型的部分不进来。
+
 ## 密钥配置
 
 脚本优先读环境变量，兜底 `~/.claude/settings.json`（Claude Code 本地设置）：
