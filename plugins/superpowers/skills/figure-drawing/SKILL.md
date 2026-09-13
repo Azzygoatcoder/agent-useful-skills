@@ -27,7 +27,19 @@ description: Use when 需要论文级架构图/流程图/示意图。产出可�
 >
 > **技术/Agent 架构图补位（2026-08-12）**：Agent/多智能体/系统架构图 → **fireworks-tech-graph**（语义形状：LLM=双边框圆角矩形、Agent=六边形、向量库=环柱体；Agent/记忆/RAG 领域模式内建；SVG 结构校验→PNG 视觉回读→定向修订的有界验证环）。与 diagram-design（editorial 排版）和 drawio（可编辑）定位不重叠——它专攻技术语义图。
 >
-> ⚠️ 上面两个（diagram-design / fireworks-tech-graph）是**本仓库之外的可选 skill**，不随本仓库分发（见 THIRD-PARTY-NOTICES.md）。未安装时按本 skill 的直绘路线走，不要去调用不存在的技能。
+> ⚠️ 上面两个（diagram-design / fireworks-tech-graph）是**本仓库之外的外部 skill**，不随本仓库分发（见 THIRD-PARTY-NOTICES.md）。
+>
+> **别假设它们一定在**——先跑一次探测再决定路线：
+>
+> ```
+> python bin/check_external.py          # 报告：找到没有 / frontmatter 是否适配 DSH / 是否悬空
+> pwsh  bin/redeploy-skills.ps1         # 修复：把找到的软链进 DSH 技能根（找不到只提示）
+> ```
+>
+> 清单在 `skills.external.json`。为什么需要这步：DSH 只发现 `~/.dsh/skills`、`~/.agents/skills`
+> 与 `<项目>/.dsh/skills`，而这些外部 skill 常常只装在 `~/.claude/skills`——**技能里写着
+> "use diagram-design"，DSH 里的模型却根本看不到它**。探测不到就按本 skill 的直绘路线走，
+> **不要调用不存在的技能**。
 
 > **工具不堆积原则（2026-08-12）**：制图模块每个工具只占一个明确生态位（示意/概念=gpt-image-2 / editorial 图=diagram-design / 技术架构图=fireworks-tech-graph / 数据图=data_plot.py / 可编辑矢量=drawio）。新 skill 先判断：**有新东西才吸收，重复轮子不安装**——只把真正新增的能力/模式并进来，不平行堆工具。
 

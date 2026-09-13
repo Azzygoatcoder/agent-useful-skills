@@ -121,8 +121,64 @@ if (Test-Path $target) {
   }
 }
 
+# ── 外部 skill 依赖（软失败）────────────────────────────────────────────
+# 本仓库技能会引用若干不随仓库分发的外部 skill（diagram-design 等）。它们常只装在
+# ~/.claude/skills，而 DSH 只发现 ~/.dsh/skills、~/.agents/skills、<项目>/.dsh/skills，
+# 于是「技能里写着 use diagram-design，DSH 里的模型看不到它」。
+# 这里把找到的软链进 DSH 技能根；**找不到只提示、不算失败**（换机器不炸）。
+# 清单：skills.external.json，解析逻辑复用 bin/check_external.py（单一事实源）。
+$extNotes = @()
+$extMissing = @()
+$extLinked = 0
+if (-not $Check) {
+  $extScript = Join-Path $PSScriptRoot 'check_external.py'
+  $extRegistry = Join-Path $repoRoot 'skills.external.json'
+  if ((Test-Path $extScript) -and (Test-Path $extRegistry)) {
+    $emitted = & python $extScript --registry $extRegistry --emit-paths 2>$null
+    $present = @{}
+    foreach ($line in @($emitted)) {
+      if ($line -match "`t") {
+        $parts = $line -split "`t", 2
+        $present[$parts[0].Trim()] = $parts[1].Trim()
+      }
+    }
+    $registry = Get-Content $extRegistry -Raw | ConvertFrom-Json
+    foreach ($e in $registry.external) {
+      $nm = $e.name
+      $dest = Join-Path $target $nm
+      if ($present.ContainsKey($nm)) {
+        $srcPath = $present[$nm]
+        # 悬空链接检测：lexists 为真但 SKILL.md 取不到 → 目标已失效，需重建
+        $broken = (Test-Path -LiteralPath $dest) -and (-not (Test-Path (Join-Path $dest 'SKILL.md')))
+        $absent = -not (Test-Path -LiteralPath $dest)
+        if ($absent -or $broken) {
+          if ($broken) { Remove-Item -LiteralPath $dest -Recurse -Force -ErrorAction SilentlyContinue }
+          if ($IsWindows) { New-Item -ItemType Junction -Path $dest -Target $srcPath | Out-Null }
+          else { New-Item -ItemType SymbolicLink -Path $dest -Target $srcPath | Out-Null }
+          $what = if ($broken) { '已重建悬空链接' } else { '已链接' }
+          Write-Host "$what 外部技能 $nm <- $srcPath"
+          $extLinked++
+        }
+      } elseif ($e.optional -ne $true) {
+        $extMissing += $nm
+      }
+    }
+  }
+}
+if ($extMissing.Count -gt 0) {
+  $extNotes += "外部 skill 未找到（引用它们的技能已写明回退路线）：$($extMissing -join ', ')"
+  $extNotes += "  逐项排查：python bin/check_external.py"
+}
+
 if ($Check) {
   foreach ($src in $sources) { Test-Frontmatter $src.FullName ([ref]$issues) }
+  $extScript = Join-Path $PSScriptRoot 'check_external.py'
+  $extRegistry = Join-Path $repoRoot 'skills.external.json'
+  if ((Test-Path $extScript) -and (Test-Path $extRegistry)) {
+    Write-Host "--- 外部 skill 依赖"
+    & python $extScript --registry $extRegistry --dsh-skills $target
+    Write-Host "   （外部依赖缺失只提示、不算失败——软失败）"
+  }
   foreach ($n in $notes) { Write-Host "· $n" }
   if ($issues.Count -gt 0) {
     $issues | ForEach-Object { Write-Host "✗ $_" }
@@ -133,5 +189,6 @@ if ($Check) {
   exit 0
 }
 foreach ($n in $notes) { Write-Host "· $n" }
+foreach ($n in $extNotes) { Write-Host "· $n" }
 
 exit 0

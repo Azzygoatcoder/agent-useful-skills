@@ -73,6 +73,10 @@ jobs:
             plugins/code-security-skills/assets/audit-workflow.html \
             plugins/dev-workflow/assets/push-access-flowchart.html
 
+      - name: 外部依赖清单自检（验证清单可解析 + 逻辑可跑；不要求依赖存在）
+        shell: bash
+        run: python bin/check_external.py
+
       - name: 部署/自愈校验
         shell: pwsh
         run: |

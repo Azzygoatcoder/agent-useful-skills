@@ -194,6 +194,30 @@ pwsh bin/redeploy-skills.ps1 -Check            # 部署完整性（CI 先造 DSH
 > 该目录里我们自己的 skill（figure-drawing / paper-reading / paper-writing / office-tools）
 > 与沿用下来的那些，接受同样的检查与同样的改进。
 
+## 外部 skill 依赖（`skills.external.json`）
+
+有些能力引用了**不随本仓库分发**的第三方 skill（`diagram-design` / `fireworks-tech-graph` /
+`md-format-fixer`），它们常只装在 `~/.claude/skills`。而 **DSH 只发现** `~/.dsh/skills`、
+`~/.agents/skills` 与 `<项目>/.dsh/skills` —— 于是会出现「技能里写着 use diagram-design，
+DSH 里的模型却看不到它」。这在以前是**靠模型记得**，属于验证环唯一没覆盖的地方。
+
+现在依赖是声明式 + 可校验的：
+
+```bash
+python bin/check_external.py      # 报告：找到没有 / frontmatter 是否适配 DSH / 链接是否悬空
+pwsh  bin/redeploy-skills.ps1     # 修复：把找到的软链进 DSH 技能根
+pwsh  bin/redeploy-skills.ps1 -Check   # 只读校验（会打印外部依赖小节）
+```
+
+- **软失败**：来源找不到就跳过并提示，**不算失败、退出码仍为 0**。换机器上没有这些 skill
+  也不会让部署炸掉；引用它们的技能各自写明回退路线
+- **悬空自愈**：链接目标消失后再部署会重建（与 `node_modules` 那个 pnpm-hash 悬空坑同类问题）
+- **契约校验**：外部 skill 的 frontmatter 也按 DSH 规则查（`name` / `description` /
+  legacy 键），并提示 catalog 截断风险 —— 实测 `diagram-design` 646 字符、
+  `md-format-fixer` 532 字符，**都超过 DSH 的 500 上限**，挂进 catalog 会被截断
+- `wiretext` 标为**可选**（本机未安装；它只是 `diagram-design` 内部推荐的轻量替代，
+  不是本仓库技能的硬依赖）
+
 ## 密钥配置
 
 脚本优先读环境变量，兜底 `~/.claude/settings.json`（Claude Code 本地设置）：

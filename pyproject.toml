@@ -44,6 +44,7 @@ data-plot = "data_plot:main"
 style-reference-docx = "style_reference_docx:main"
 check-skills = "check_skills:main"
 export-diagram = "export_diagram:main"
+check-external = "check_external:main"
 
 [tool.setuptools]
 package-dir = {"" = "bin"}
@@ -60,4 +61,5 @@ py-modules = [
     "style_reference_docx",
     "check_skills",
     "export_diagram",
+    "check_external",
 ]

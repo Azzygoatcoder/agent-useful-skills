@@ -12,6 +12,7 @@
   "files": [
     "index.mjs",
     "skills.manifest.json",
+    "skills.external.json",
     "cordis.patch.yml",
     "skills",
     "plugins",
