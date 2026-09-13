@@ -28,6 +28,11 @@ import shutil
 import subprocess
 import sys
 
+# 输出含中文与 ✗/✓：Windows 上 stdout 默认 cp1252，不重配置会 UnicodeEncodeError
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+
 SVG_RE = re.compile(r"<svg\b.*?</svg>", re.S)
 FONT_IMPORT = (
     "<style>@import url('https://fonts.googleapis.com/css2?"

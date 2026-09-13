@@ -19,6 +19,12 @@ import re
 import sys
 from pathlib import Path
 
+# 输出含中文与 ✅/✗：Windows 上 stdout 默认 cp1252，不重配置会 UnicodeEncodeError
+# （在自家 CI 的 windows runner 上真实踩到过）。与 office_tools/data_plot 保持一致。
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+
 SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 BOOLEAN_FIELDS = {"disable-model-invocation", "user-invocable"}
 # DSH 运行时 catalog 的 description 截断上限（dsh-tool-skill: DEFAULT_CATALOG_DESCRIPTION_MAX_LENGTH）

@@ -13,6 +13,12 @@ name: verify
 permissions:
   contents: read
 
+# Windows runner 上 Python 的 stdout 默认是 cp1252，而本仓库的脚本会输出
+# 中文与 ✅/✗ 等字符 —— 不设这个就会 UnicodeEncodeError。
+# 脚本自身也做了 reconfigure 兜底，这里是 CI 侧的双保险。
+env:
+  PYTHONIOENCODING: utf-8
+
 concurrency:
   group: verify-${{ github.ref }}
   cancel-in-progress: true

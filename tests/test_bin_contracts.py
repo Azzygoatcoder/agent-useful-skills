@@ -20,6 +20,11 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 BIN = ROOT / "bin"
 sys.path.insert(0, str(BIN))
 
+# 输出含中文：Windows 上 stdout 默认 cp1252，不重配置会 UnicodeEncodeError
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+
 failures = []
 
 
