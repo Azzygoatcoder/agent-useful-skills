@@ -188,16 +188,11 @@ pwsh bin/redeploy-skills.ps1 -Check            # 部署完整性（CI 先造 DSH
 > `tests/` 下是**离线可跑的契约测试**——凡是能用 stub 替掉网络调用的行为契约都放这里，
 > 这样可以进 CI；需要真调模型的部分不进来。
 
-### 上游 fork 不在校验范围内（`plugins/superpowers/`）
-
-`superpowers` 是**冻结的本地 fork**：不跟随上游更新，也不合并上游改动（见
-[plugins/superpowers/CLAUDE.md](plugins/superpowers/CLAUDE.md)）。按这个约定，校验器对它
-**只做 frontmatter 结构校验，不再提内容质量意见**（描述措辞、运行时耦合法、交叉引用、
-孤儿参考文件等）——既然不会去改那些内容，反复报"值得改"只是噪音。
-
-**但保留 frontmatter 校验是有意的**：这 9 个技能是**已注册、真实生效**的技能，frontmatter
-一旦不合规（`name` 非法、缺 `description`、用了 legacy camelCase 键），DSH 会**静默丢弃**
-它们。那是集成契约，不是内容品味问题，所以照样查。
+> **校验范围是全仓库**，`plugins/superpowers/` 不例外。它虽然 fork 自上游（且**不跟随上游更新**），
+> 但已经过本地改造、是要维护并改进的代码（见 [plugins/superpowers/CLAUDE.md](plugins/superpowers/CLAUDE.md)：
+> 「永不更新上游，原版 MIT 可自由修改」）。**"不跟随上游"是为了可以自由改，不是不去动它**——
+> 该目录里我们自己的 skill（figure-drawing / paper-reading / paper-writing / office-tools）
+> 与沿用下来的那些，接受同样的检查与同样的改进。
 
 ## 密钥配置
 
