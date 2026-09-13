@@ -50,7 +50,7 @@ agent-useful-skills/
 
 | Skill | 用途 |
 |-------|------|
-| figure-drawing | 论文制图：概念图 / 精确数据图 / 技术架构图 场景分流，vision 渲染验证 |
+| figure-drawing | 论文制图：概念图 / 精确数据图 / 技术架构图 场景分流，原生读图自检 + 独立模型复核 |
 | paper-reading | 论文阅读：搜索入库 / 防撞车 / 快速读 / 精读（六节模板 + 置信度分级） |
 | office-tools | Office 写作：md→docx/pptx（公式转原生方程）、Excel 处理、提图 |
 | paper-writing | 论文写作一条龙：venue 选模板 → 模块化写作 → 编译页数检查 |
@@ -126,7 +126,7 @@ pip install -e ".[plot]"         # + matplotlib / pandas / numpy（期刊级数�
 pip install -e ".[all]"          # 全部
 
 review file.md           # 跨模型对抗评审（结构化 JSON）
-vision img.png "描述"    # 识图
+vision img.png "渲染有没有错"   # 跨模型识图复核（看懂图用原生读图即可）
 office-tools md2docx a.md b.docx      # md→docx 走 pandoc（无需 extras）
 office-tools extract pdf 论文.pdf --outdir 图/ --min-size 250 --min-kb 5   # 需 [office]
 data-plot demo                        # 需 [plot]
