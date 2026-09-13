@@ -1,5 +1,7 @@
 # Code Security Skills
 
+[![verify](https://github.com/Azzygoatcoder/agent-useful-skills/actions/workflows/verify.yml/badge.svg?branch=master)](https://github.com/Azzygoatcoder/agent-useful-skills/actions/workflows/verify.yml)
+
 > Claude Code 插件 — 系统化代码安全审计技能集，覆盖漏洞发现、验证、报告、修复、重审计全流程。**v1.4.3**
 
 ![安全审计 skill 工作流](assets/audit-workflow.svg)

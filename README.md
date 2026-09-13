@@ -1,5 +1,7 @@
 # Agent Useful Skills
 
+[![verify](https://github.com/Azzygoatcoder/agent-useful-skills/actions/workflows/verify.yml/badge.svg?branch=master)](https://github.com/Azzygoatcoder/agent-useful-skills/actions/workflows/verify.yml)
+
 **模块化 AI 科研/工程技能集合（Claude Code / DeepSeek Harness 通用）。** 把「读论文 → 画图 → 写文档 → 安全审计」这些重复任务，沉淀成可复用的 skill + 脚本，每个模块自带验证环。
 
 > 一句话：**LLM 写中间产物 → 脚本固化格式 → 跨模型验证环兜底**。
@@ -185,6 +187,17 @@ pwsh bin/redeploy-skills.ps1 -Check            # 部署完整性（CI 先造 DSH
 
 > `tests/` 下是**离线可跑的契约测试**——凡是能用 stub 替掉网络调用的行为契约都放这里，
 > 这样可以进 CI；需要真调模型的部分不进来。
+
+### 上游 fork 不在校验范围内（`plugins/superpowers/`）
+
+`superpowers` 是**冻结的本地 fork**：不跟随上游更新，也不合并上游改动（见
+[plugins/superpowers/CLAUDE.md](plugins/superpowers/CLAUDE.md)）。按这个约定，校验器对它
+**只做 frontmatter 结构校验，不再提内容质量意见**（描述措辞、运行时耦合法、交叉引用、
+孤儿参考文件等）——既然不会去改那些内容，反复报"值得改"只是噪音。
+
+**但保留 frontmatter 校验是有意的**：这 9 个技能是**已注册、真实生效**的技能，frontmatter
+一旦不合规（`name` 非法、缺 `description`、用了 legacy camelCase 键），DSH 会**静默丢弃**
+它们。那是集成契约，不是内容品味问题，所以照样查。
 
 ## 密钥配置
 

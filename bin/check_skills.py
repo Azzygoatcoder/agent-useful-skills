@@ -30,6 +30,11 @@ BOOLEAN_FIELDS = {"disable-model-invocation", "user-invocable"}
 # DSH 运行时 catalog 的 description 截断上限（dsh-tool-skill: DEFAULT_CATALOG_DESCRIPTION_MAX_LENGTH）
 CATALOG_DESC_MAX = 500
 
+# 上游 fork 的冻结目录：不再跟随上游更新、也不合并上游改动（见 plugins/superpowers/CLAUDE.md）。
+# 对这些目录只做 frontmatter 结构校验——那是 DSH 的硬契约，坏了技能会被**静默丢弃**；
+# 而描述措辞/内容质量、交叉引用这类"值得改"的意见不再提，因为按约定我们不会去改上游内容。
+FROZEN_UPSTREAM_DIRS = ("plugins/superpowers",)
+
 # 运行时耦合提示（warning 级）：把 agent 假设写成特定模型
 COUPLING_PATTERNS = [
     (re.compile(r"agent（Claude）|agent\s*\(\s*Claude\s*\)"), "把 agent 写死为 Claude（应写 'agent'）"),
@@ -104,11 +109,23 @@ def iter_skill_dirs(root: Path):
                 yield entry
 
 
-def check_skill(skill_dir: Path):
-    """返回 (errors, warnings, infos)。"""
+def is_frozen_upstream(rel_posix: str) -> bool:
+    """rel_posix 是否为仓库根相对路径且落在冻结的上游 fork 目录内。"""
+    return any(rel_posix == d or rel_posix.startswith(d + "/") for d in FROZEN_UPSTREAM_DIRS)
+
+
+def check_skill(skill_dir: Path, root: Path | None = None):
+    """返回 (errors, warnings, infos)。
+
+    对 plugins/superpowers（上游 fork，冻结不再跟进）只做**结构校验**：
+    frontmatter 是 DSH 的硬契约，坏了会导致技能被静默丢弃，所以必须查；
+    描述长度/措辞、运行时耦合法、嵌套发现这类**内容质量**意见不再对上游内容提。
+    """
     errors, warnings, infos = [], [], []
+    rel = skill_dir.as_posix() if root is None else skill_dir.relative_to(root).as_posix()
+    frozen = is_frozen_upstream(rel)
     name = skill_dir.name
-    if not SKILL_NAME_RE.match(name):
+    if not frozen and not SKILL_NAME_RE.match(name):
         warnings.append(f"目录名 '{name}' 不是 kebab-case（DSH 发现不校验，但建议与 name 一致）")
     skill_md = skill_dir / "SKILL.md"
     if not skill_md.is_file():
@@ -137,9 +154,9 @@ def check_skill(skill_dir: Path):
         errors.append(f"{skill_md.name}: frontmatter 缺少 description（DSH 必需）")
     elif not desc.strip():
         errors.append(f"{skill_md.name}: description 为空")
-    elif len(desc) < 20:
+    elif not frozen and len(desc) < 20:
         warnings.append(f"{skill_md.name}: description 过短（{len(desc)} 字符）——弱模型触发命中率低，建议加触发词")
-    elif len(desc) > CATALOG_DESC_MAX:
+    elif not frozen and len(desc) > CATALOG_DESC_MAX:
         warnings.append(
             f"{skill_md.name}: description 超长（{len(desc)} > {CATALOG_DESC_MAX} 字符）"
             f"——DSH catalog 会截断，末尾触发词会丢"
@@ -148,6 +165,18 @@ def check_skill(skill_dir: Path):
     for field in BOOLEAN_FIELDS:
         if field in meta and meta[field].strip().lower() not in ("true", "false"):
             errors.append(f"{skill_md.name}: '{field}' 必须是 true/false，实际 '{meta[field]}'")
+
+    # legacy camelCase 键会让 DSH 加载器直接抛错 → 技能被静默丢弃。
+    # 这属于 frontmatter 硬契约，冻结目录同样要查。
+    for legacy, canonical in (("disableModelInvocation", "disable-model-invocation"),
+                              ("modelInvocable", "disable-model-invocation"),
+                              ("userInvocable", "user-invocable")):
+        if legacy in meta:
+            errors.append(f"{skill_md.name}: legacy 键 '{legacy}' 会让 DSH 丢弃该技能，改用 '{canonical}'")
+
+    if frozen:
+        infos.append(f"{skill_md.name}: 上游 fork（冻结）——只查 frontmatter 硬契约，跳内容质量检查")
+        return errors, warnings, infos
 
     body = text.split("---", 2)[2] if text.count("---") >= 2 else text
     for pat, msg in COUPLING_PATTERNS:
@@ -312,10 +341,20 @@ def check_references(root: Path):
     只检查**非归档**技能：archive/ 是刻意不维护的存档，对它报断链只会制造噪音。
     """
     errors, warnings = [], []
+    infos: list[str] = []
     dirs = _skill_dirs_by_name(root)
-    live = {n: d for n, d in dirs.items() if "archive" not in d.parts}
+    live = {n: d for n, d in dirs.items()
+            if "archive" not in d.parts and not is_frozen_upstream(
+                d.relative_to(root).as_posix())}
     known = set(dirs)
     archived = {d.name for d in iter_skill_dirs(root) if "archive" in d.parts}
+    frozen_names = sorted(n for n, d in dirs.items() if is_frozen_upstream(
+        d.relative_to(root).as_posix()))
+    if frozen_names:
+        infos.append(
+            f"跳过上游 fork 的引用检查（{len(frozen_names)} 个：{', '.join(frozen_names)}）"
+            f"——按约定不跟进/不合并上游内容；frontmatter 硬契约仍在查"
+        )
 
     for name, d in sorted(live.items()):
         mds = sorted(d.rglob("*.md"))
@@ -383,7 +422,7 @@ def check_references(root: Path):
                         warnings.append(
                             f"{rel}: 把已归档的 '{a}' 当现役技能引用（默认不注册）"
                         )
-    return errors, warnings
+    return errors, warnings, infos
 
 
 def check_diagrams(root: Path):
@@ -434,7 +473,7 @@ def main() -> int:
     problems: list[str] = []
     for skill_dir in iter_skill_dirs(root):
         n_skills += 1
-        errors, warnings, infos = check_skill(skill_dir)
+        errors, warnings, infos = check_skill(skill_dir, root)
         for w in infos:
             print(f"  info   {w}")
         for w in warnings:
@@ -460,7 +499,9 @@ def main() -> int:
 
     # 跨文件引用解析（断链 / 幽灵 skill 引用 / 孤儿参考文件）
     if not args.no_refs:
-        ref_err, ref_warn = check_references(root)
+        ref_err, ref_warn, ref_info = check_references(root)
+        for i in ref_info:
+            print(f"  info   {i}")
         for e in ref_err:
             n_err += 1
             problems.append(f"  ERROR  {e}")
