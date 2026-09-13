@@ -1,6 +1,6 @@
 ---
 name: office-tools
-description: Use when 需要处理 WPS/Office/PDF 文件——"Excel 数据处理"、"转成 Excel"、"提取 PDF 里的图"、"markdown 转 xlsx/docx/pptx"。触发词含 xlsx/docx/pptx/Excel/表格/配图。
+description: Use when 需要处理已有的 WPS/Office/PDF 文件——"Excel 数据处理"、"转成 Excel"、"从 PDF/Word/PPT 里提取图"、"markdown 转 xlsx/docx/pptx"。触发词含 xlsx/docx/pptx/Excel/表格。**只处理已有文件**：要"新建/画一张图"（架构图、流程图、示意图、配一张新图）走 figure-drawing，不要用本技能。
 ---
 
 # Office Tools — Office/PDF 文件处理

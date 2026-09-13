@@ -1,6 +1,6 @@
 ---
 name: code-security-audit
-description: Use when the user wants to audit a codebase for security vulnerabilities, perform a security review, do penetration testing, run a 代码审计 or 安全审查, check for security issues, or verify that security fixes have been applied. Triggers on phrases like "audit this repo", "security review", "find vulnerabilities", "安全审计", "代码审计", "再审计", "verify fixes", "安全扫描".
+description: Use when the user wants to audit a codebase for security vulnerabilities, run a 代码审计 or 安全审查, do penetration testing, or verify that security fixes were applied. Triggers on "audit this repo", "security review", "find vulnerabilities", "安全审计", "代码审计", "安全扫描", "再审计", "检查修复", "确认修复", "re-audit", "verify fixes", "/audit", "/reaudit". Covers full audit (Phase 1-3) plus incremental re-audit and fix-state tracking (Phase 4). To APPLY fixes use security-fix-skill.
 ---
 
 # Code Security Audit
@@ -15,24 +15,27 @@ Systematic security audit of any codebase using parallel domain exploration. Lau
 
 | 场景 | 触发 | 深度 | 产出 | 流程 |
 |------|------|:--:|------|------|
-| 快速风险扫描 | "/audit quick" / "快扫一眼" | L1 | 一页风险概览（不看全文） | Phase 1 单 agent + 摘要，跳过 Self-Check |
+| 快速风险扫描 | "快扫一眼" / "/audit quick" | L1 | 一页风险概览（不看全文） | Phase 1 单 agent + 摘要，跳过 Self-Check |
 | **全面审计（默认）** | "audit this repo" / "安全审计" / "/audit" | L2-L3 | 完整 SECURITY_AUDIT.md | Phase 1-3 全流程 |
-| 增量重审 | "/reaudit" / "检查修复" | 变更文件 | 重审段 + 状态更新 | Phase 4 |
+| 增量重审 | "再审计" / "检查修复" / "/reaudit" | 变更文件 | 重审段 + 状态更新 | Phase 4 |
+| 状态追踪 | "/reaudit status" / "mark-fixed \<ID\>" | — | 状态汇总 / 注解更新 | 状态追踪（不读文件） |
+| 快速修复 | "修漏洞" / "/security-fix" | — | 按 P1-P4 批量修复 | 走 security-fix 技能 |
 | 单 PR / 单文件 | "review this PR" / "看下这个改动" | — | 代码评审 | 走 `review-skill`（自带代码评审清单），不进安全审计 |
-| 快速修复 | "/security-fix" / "修漏洞" | — | 按 P1-P4 批量修复 | security-fix-skill |
 
-> 默认是**全面审计**。用户要求"快扫/quick"才降级 L1；"修漏洞/再审计"分别走 security-fix / reaudit。场景不清时按全面审计走，深度宁高勿低。
+> 默认是**全面审计**。用户要求"快扫/quick"才降级 L1；"修漏洞"走 security-fix、"再审计/检查修复"走 Phase 4。场景不清时按全面审计走，深度宁高勿低。
 
-## Slash Commands
+## Slash Commands / Modes
 
-| Command | Action |
-|---------|--------|
-| `/audit` | Full security audit — explore → verify → report (Phase 1–3) |
-| `/reaudit` | Verify previous audit fixes were applied (Phase 4) |
-| `/reaudit mark-fixed <ID>` | Lightweight: mark a finding as fixed (update status annotation only, no file read) |
-| `/reaudit mark-deferred <ID>` | Mark a finding as structurally deferred |
-| `/reaudit status` | Show current fix progress (count by status from annotations) |
-| `/code-security-audit` | Same as `/audit` (canonical name) |
+| Command | Action | Reads files? |
+|---------|--------|-------------|
+| `/audit` | 全面审计 — explore → verify → report (Phase 1–3) | 是 |
+| `/reaudit` | 增量重审，验证先前 finding 是否已修复 (Phase 4) | 仅变更文件 |
+| `/reaudit mark-fixed <ID>` | 标记为已修复（只改状态注解，不读文件） | 否 |
+| `/reaudit mark-deferred <ID> [--reason "文本"]` | 标记为结构性延期 | 否 |
+| `/reaudit status` | 修复进度汇总（按状态统计注解） | 否 |
+| `/code-security-audit` | 同 `/audit`（规范名） | 是 |
+
+> `/audit` 与 `/reaudit` 的入口说明见 [references/reaudit-modes.md](references/reaudit-modes.md)（含各模式逐步操作、报告路径探测、退出码约定）。
 
 ## When to Use
 
@@ -110,3 +113,4 @@ These rules are NON-NEGOTIABLE and take precedence over all other considerations
 | 2026-08-12 | 对齐科研骨架新范式 | 场景判定表（快速/全面/增量/单 PR 四路分流）；review.py 跨模型对抗验证进 Phase 2；security-audit-tools.py 脚本化状态追踪 |
 | 2026-08-12 | demo-caregiver-training 首审 | 小代码库（1474 行）直读全量等效并行探索；**review.py 对抗实际抓出 3 个问题**（PROMPT-1 严重度低估→升 High、AUTH/STATE 威胁模型自相矛盾、SECRET-1 是噪音→移建议区）——跨模型对抗验证价值实证；威胁模型必须先声明（本地 vs 暴露）再定级 |
 | 2026-08-24 | P0 瘦身 | 报告模板（report + re-audit）外移 references/audit-report-template.md；Quick Reference 压缩为指针、Common Mistakes 并入 Do NOT（SKILL.md 466→约 300 行） |
+| 2026-09-12 | **技能合并（27→18 之后的第二轮瘦身）** | `audit` 与 `reaudit` 合并回本技能：`audit` 只是 15 行前言（"去读 code-security-audit"），无独立流程却共享「安全审计」触发词；`reaudit` 是本技能 Phase 4 加三个状态操作，与本技能触发词重叠实测最高（Jaccard 0.15，共享「再审计」「verify fixes」）——同一请求可能命中重量级完整审计而非 Phase 4 快捷入口。两者已归档到 archive/（附合并说明与原件）。Phase 4 完整操作外移 references/reaudit-modes.md，并顺带补上：祖先性检查（audit commit 被 rebase 后 `git diff` 会返回一堆无关文件——本仓库实测 151 个路径）、FILE 的仓库根相对基准约定、Mode 1 的路径校验、status 输出不得吞掉 partial/not-fixed |

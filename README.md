@@ -43,7 +43,7 @@ agent-useful-skills/
 | 插件 | 版本 | 说明 |
 |------|------|------|
 | [Code Security Skills](plugins/code-security-skills/) | v1.4.2 | 系统化安全审计：场景分流 → 并行探索 → 深度验证（跨模型对抗）→ 报告 → 增量重审计 + 状态追踪工具 |
-| [Dev Workflow](plugins/dev-workflow/) | v1.0.2 | Git 协作与发布：issue / PR / release / review |
+| [Dev Workflow](plugins/dev-workflow/) | v2.0.0 | Git 协作与发布：issue / PR / review / release（单技能覆盖全链） |
 | [Superpowers（本地改版）](plugins/superpowers/) | 6.2.0-local | superpowers fork + 科研骨架自定义 skill |
 
 ### 自定义 Skills（`plugins/superpowers/skills/`）
@@ -155,10 +155,11 @@ New-Item -ItemType Junction -Path "$env:USERPROFILE\.dsh\skills\paper-reading" -
 dsh plugin --profile web add github:Azzygoatcoder/agent-useful-skills
 ```
 
-- 插件按 `skills.manifest.json` 注册**默认技能清单**（当前 18 个）；仓库中其余单层技能保留为归档/可选，不默认注册（与 redeploy-skills.ps1 同一份清单契约）
+- 插件按 `skills.manifest.json` 注册**默认技能清单**（当前 12 个）；仓库中其余单层技能保留为归档/可选，不默认注册（与 redeploy-skills.ps1 同一份清单契约）
 - **去重契约**：已通过 junction 部署在 `~/.dsh/skills`（或项目 `.dsh/skills`）的技能名会被插件自动跳过，本地在用的副本优先，不会重复注册；全新机器才会获得插件自带的默认技能
-- **默认清单**：`using-superpowers`、`test-driven-development`、`systematic-debugging`、`verification-before-completion`、`subagent-driven-development`、`figure-drawing`、`paper-reading`、`paper-writing`、`office-tools`、`storage-analyzer`、`code-security-audit`、`audit`、`reaudit`、`security-fix-skill`、`issue-skill`、`pr-skill`、`release-skill`、`review-skill`
-- **归档默认不注册**：`brainstorming`、`writing-plans`、`dispatching-parallel-agents`、`finishing-a-development-branch`、`using-git-worktrees`、`requesting-code-review`、`receiving-code-review`、`writing-skills`、`self-evolve`；目录已移入 `archive/`，如需要可在 `skills.manifest.json` 中加回并移回对应 skill 目录
+- **默认清单（12）**：`test-driven-development`、`systematic-debugging`、`verification-before-completion`、`subagent-driven-development`、`figure-drawing`、`paper-reading`、`paper-writing`、`office-tools`、`storage-analyzer`、`code-security-audit`、`security-fix-skill`、`dev-workflow`
+- **刻意不占 catalog**：`using-superpowers`（元纪律，`disable-model-invocation: true`）——仍可手动调用，但不参与模型自动触发（它的 description 是"任何对话开始时"）。`verify-plugin.mjs` 会断言该字段存在，防止静默失效
+- **归档默认不注册（15）**：`brainstorming`、`writing-plans`、`dispatching-parallel-agents`、`finishing-a-development-branch`、`using-git-worktrees`、`requesting-code-review`、`receiving-code-review`、`writing-skills`、`self-evolve`（原 meta/流程类）；以及合并掉的 `audit`、`reaudit`（→ `code-security-audit`）、`issue-skill`、`pr-skill`、`release-skill`、`review-skill`（→ `dev-workflow`）。目录都在 `archive/`，每个附 `README.md` 说明合并原因与原件，如需要可在 `skills.manifest.json` 中加回
 - 白盒自检：`node bin/verify-plugin.mjs`（需仓库根 `node_modules/@deepseek-ai/dsh-skill-filesystem` 可解析，见 `verify-plugin.mjs` 头部注释）
 
 ## 密钥配置

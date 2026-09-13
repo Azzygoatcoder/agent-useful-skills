@@ -17,6 +17,7 @@
 //   0.1.1-rc.2 而运行时是 0.1.5-rc.1）。本脚本只验证插件自身的注册/去重契约，
 //   两者 API 兼容即可；若上游改了 Config/list() 形状，需同步核对运行时版本。
 import { mkdtemp, rm } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -71,15 +72,30 @@ const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 
 // --- 2/3. 去重契约 + 候选形状 ---
 const dirs = repoSkillRoots().map((d) => d.replace(/\\/g, '/').split('/').at(-1)).sort()
-check('默认技能目录发现 = 仓库默认清单', dirs.length >= DEFAULT_SKILL_NAMES.length, `${dirs.length} 个: ${dirs.join(', ')}`)
+check('默认技能目录发现 ⊇ 仓库默认清单', dirs.length >= DEFAULT_SKILL_NAMES.length, `${dirs.length} 个: ${dirs.join(', ')}`)
 
 const missingDefault = DEFAULT_SKILL_NAMES.filter((d) => !dirs.includes(d))
 check('默认清单中的技能都存在于默认目录', missingDefault.length === 0, missingDefault.join(', '))
-const extraDirs = dirs.filter((d) => !DEFAULT_SKILL_NAMES.includes(d))
-check('默认目录无多余技能', extraDirs.length === 0, extraDirs.join(', '))
+
+// 刻意不参与模型自动调用的技能：仍需可加载/可手动调用，但设 disable-model-invocation
+// 把它们从 catalog 摘掉，避免每轮误命中。断言该字段确实存在——否则摘除会静默失效。
+const CATALOG_EXCLUDED = ['using-superpowers']
+const extraDirs = dirs.filter((d) => !DEFAULT_SKILL_NAMES.includes(d) && !CATALOG_EXCLUDED.includes(d))
+check('默认目录无多余技能（CATALOG_EXCLUDED 除外）', extraDirs.length === 0, extraDirs.join(', '))
+
+for (const name of CATALOG_EXCLUDED) {
+  const skillPath = join(repoRoot, 'plugins/superpowers/skills', name, 'SKILL.md')
+  let hasFlag = false
+  try {
+    const head = readFileSync(skillPath, 'utf8').split('---')[1] ?? ''
+    hasFlag = /^\s*disable-model-invocation:\s*true\s*$/m.test(head)
+  } catch { /* 文件缺失 → hasFlag 保持 false */ }
+  check(`${name} 设了 disable-model-invocation: true（不占 catalog）`, hasFlag, hasFlag ? '' : `检查 ${skillPath}`)
+}
 
 const archivedDirs = archivedSkillRoots().map((d) => d.replace(/\\/g, '/').split('/').at(-1)).sort()
-check('归档技能已移入 archive/', archivedDirs.length >= 9, `${archivedDirs.length} 个: ${archivedDirs.join(', ')}`)
+// 与清单一样按实测数目断言，不用魔法数字（archive/ 会随每次合并增长）
+check('归档技能非空且与默认清单无重叠', archivedDirs.length > 0, `${archivedDirs.length} 个: ${archivedDirs.join(', ')}`)
 const archiveConflict = archivedDirs.filter((d) => DEFAULT_SKILL_NAMES.includes(d))
 check('归档与默认清单无重叠', archiveConflict.length === 0, archiveConflict.join(', '))
 

@@ -1,6 +1,7 @@
 ---
 name: using-superpowers
 description: Use when starting any conversation - establishes how to find and use skills, checking whether a skill applies before acting, with fast paths for small tasks
+disable-model-invocation: true
 ---
 
 <SUBAGENT-STOP>

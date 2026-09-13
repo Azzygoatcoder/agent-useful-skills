@@ -21,6 +21,8 @@ from pathlib import Path
 
 SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 BOOLEAN_FIELDS = {"disable-model-invocation", "user-invocable"}
+# DSH 运行时 catalog 的 description 截断上限（dsh-tool-skill: DEFAULT_CATALOG_DESCRIPTION_MAX_LENGTH）
+CATALOG_DESC_MAX = 500
 
 # 运行时耦合提示（warning 级）：把 agent 假设写成特定模型
 COUPLING_PATTERNS = [
@@ -104,6 +106,9 @@ def check_skill(skill_dir: Path):
         warnings.append(f"目录名 '{name}' 不是 kebab-case（DSH 发现不校验，但建议与 name 一致）")
     skill_md = skill_dir / "SKILL.md"
     if not skill_md.is_file():
+        # 归档目录刻意把 SKILL.md 改名，避免被单层发现当成现役技能
+        if (skill_dir / "archived-SKILL.md").is_file():
+            return errors, warnings, infos
         errors.append(f"{skill_dir}: 缺少 SKILL.md（DSH 单层发现要求 <技能根>/<技能名>/SKILL.md）")
         return errors, warnings, infos
     text = skill_md.read_text(encoding="utf-8")
@@ -128,6 +133,11 @@ def check_skill(skill_dir: Path):
         errors.append(f"{skill_md.name}: description 为空")
     elif len(desc) < 20:
         warnings.append(f"{skill_md.name}: description 过短（{len(desc)} 字符）——弱模型触发命中率低，建议加触发词")
+    elif len(desc) > CATALOG_DESC_MAX:
+        warnings.append(
+            f"{skill_md.name}: description 超长（{len(desc)} > {CATALOG_DESC_MAX} 字符）"
+            f"——DSH catalog 会截断，末尾触发词会丢"
+        )
 
     for field in BOOLEAN_FIELDS:
         if field in meta and meta[field].strip().lower() not in ("true", "false"):
@@ -185,7 +195,7 @@ def check_manifest(root: Path):
         d.name for d in iter_skill_dirs(root)
         if "archive" not in d.parts
     }
-    for extra in sorted(live_dirs - registered):
+    for extra in sorted(live_dirs - registered - CATALOG_EXCLUDED):
         errors.append(
             f"技能目录 '{extra}' 存在但未在 skills.manifest.json 注册"
             f"（要么加入清单，要么移入 archive/）"
@@ -257,6 +267,8 @@ def check_plugin_manifests(root: Path):
 
 
 LINK_RE = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
+# 刻意不参与模型自动调用、但仍在技能目录里的技能（须设 disable-model-invocation: true）
+CATALOG_EXCLUDED = {"using-superpowers"}
 CODE_PATH_RE = re.compile(
     r"`([A-Za-z0-9_./\\-]+\.(?:py|mjs|cjs|js|ps1|md|json|yml|yaml|toml|sh|tex|bib|html|svg))`"
 )

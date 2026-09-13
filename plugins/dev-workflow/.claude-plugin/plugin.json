@@ -1,7 +1,7 @@
 {
   "name": "dev-workflow",
-  "description": "Git 协作与发布工作流 — issue、提 PR、评审合并、发版本",
-  "version": "1.0.2",
+  "description": "Git 协作与发布工作流 — issue、PR 评审合并、发版本（一个技能覆盖全链）",
+  "version": "2.0.0",
   "author": {
     "name": "Azzygoatcoder"
   },
