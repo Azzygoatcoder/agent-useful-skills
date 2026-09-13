@@ -61,33 +61,47 @@ def extract_mermaid(raw):
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("usage: fig2drawio.py <image_path> [--out out] [--format mermaid|drawio]", file=sys.stderr)
-        sys.exit(1)
-    img_path = sys.argv[1]
-    fmt = "mermaid"
-    out = "figure.mmd"
-    if "--format" in sys.argv:
-        fmt = sys.argv[sys.argv.index("--format") + 1]
-    if "--out" in sys.argv:
-        out = sys.argv[sys.argv.index("--out") + 1]
+    import argparse
+    p = argparse.ArgumentParser(
+        description="论文图 → draw.io / Mermaid（独立模型读图结构 → 文本模型转型）")
+    p.add_argument("image", help="输入图片路径")
+    p.add_argument("--out", help="输出文件（缺省按格式取 figure.mmd / figure.drawio）")
+    p.add_argument("--format", choices=["mermaid", "drawio"], default="mermaid",
+                   help="输出格式（此前未知值会静默落到 mermaid）")
+    p.add_argument("--structure-out", help="把读出的结构 JSON 另存一份，便于人工核对（强烈建议）")
+    args = p.parse_args()
 
-    print(f"[1/3] vision 读图结构 ({llm.VISION_MODEL})...")
+    img_path = args.image
+    fmt = args.format
+    out = args.out or ("figure.drawio" if fmt == "drawio" else "figure.mmd")
+
+    if not os.path.isfile(img_path):
+        sys.exit(f"图片不存在：{img_path}")
+
+    print(f"[1/3] 独立模型读图结构 ({llm.VISION_MODEL})...")
     structure = extract_structure(llm.img_url(img_path))
-    print("   结构 JSON:", structure[:200].replace('\n', ' '), "...")
+    if not structure or not structure.strip():
+        sys.exit("读图失败：独立模型未返回结构")
+    # 结构 JSON 是"黑盒转可检查规格"的关键产物：默认存盘，供人工核对后再转型
+    struct_out = args.structure_out or (out.rsplit(".", 1)[0] + ".structure.json")
+    with open(struct_out, "w", encoding="utf-8") as f:
+        f.write(structure)
+    print(f"   结构 JSON 已存: {os.path.abspath(struct_out)}（先核对再信任下面的转换）")
 
     if fmt == "drawio":
-        print(f"[2/3] LLM 转 draw.io XML ({llm.TEXT_MODEL})...")
+        print(f"[2/3] 文本模型转 draw.io XML ({llm.TEXT_MODEL})...")
         result = to_drawio(structure)
         if not out.endswith('.drawio'):
             out = out.rsplit('.', 1)[0] + '.drawio'
     else:
-        print(f"[2/3] LLM 转 Mermaid ({llm.TEXT_MODEL})...")
+        print(f"[2/3] 文本模型转 Mermaid ({llm.TEXT_MODEL})...")
         result = to_mermaid(structure)
         result = extract_mermaid(result)
         if not out.endswith(('.mmd', '.mermaid')):
             out = out.rsplit('.', 1)[0] + '.mmd'
 
+    if not result or not result.strip():
+        sys.exit("转换失败：文本模型未返回内容")
     with open(out, 'w', encoding='utf-8') as f:
         f.write(result)
     print(f"[3/3] 已保存: {os.path.abspath(out)}")
