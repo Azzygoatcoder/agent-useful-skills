@@ -1,6 +1,6 @@
 # Dev Workflow
 
-> **v2.0.0** — GitHub 协作与发布：一个技能覆盖 issue → PR → review → merge → release 全链。
+> **v2.0.1** — GitHub 协作与发布：一个技能覆盖 issue → PR → review → merge → release 全链。
 
 ## Skills
 
@@ -44,7 +44,9 @@ git remote add upstream https://github.com/<权威owner>/<repo>.git
 
 > ⚠️ 写操作（push / gh release / gh pr）一律**显式指名 remote 或 `--repo`**，不要依赖 `gh` 的自动推断——多 remote 时它可能挑错目标。
 
-<p align="center"><img src="assets/push-access-flowchart.png" width="560" alt="push 权限判定"/></p>
+<img src="assets/push-access-flowchart.svg" width="620" alt="push 权限判定"/>
+
+<sub>图源 `assets/push-access-flowchart.html`（单文件内联 SVG），`.svg` / `.png` 由它导出。</sub>
 
 ## 协作流全景
 
@@ -55,6 +57,7 @@ issue → PR → review → merge → release 五段已覆盖，链式交接写�
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| 2.0.1 | 2026-09-12 | 判定流程图按 diagram-design 规范重制（`push-access-flowchart.{html,svg,png}`）：补 `xmlns`（旧 `.svg` 缺它，作为 `<img>` 嵌入不渲染）；补图例与分支标签；形状/字号/坐标归到 4px 网格；椭圆半径由 24 收到 10（设计系统上限）；HTML 定为唯一图源，SVG/PNG 由它导出 |
 | 2.0.0 | 2026-09-12 | **四技能合并为一个 `dev-workflow`**（默认清单 18→12 的瘦身之一）：issue/pr/review/release 是同一条链，合并后第 0 步共用判据只写一次，场景细节外移 references/；被合并的四个归档到 archive/ 并附合并原因。**破坏性变更**：`issue-skill` / `pr-skill` / `review-skill` / `release-skill` 四个注册名不再存在（`/issue`、`/pr`、`/review`、`/release` 触发词仍由 dev-workflow 承接） |
 | 1.0.2 | 2026-09-12 | 统一 remote 约定（`origin`=你 clone 的那份 / `upstream`=权威仓库），角色改用 `gh api .permissions.push` 判——此前 pr-skill 与 release-skill 对 `origin` 的定义相反；按 gh 2.92 实测修正 `issue close --reason "not planned"`、`issue develop --checkout/--branch-repo`、`fixes #N` 位置；默认分支检测改用 `gh repo view --json defaultBranchRef`（原命令返回当前分支）；补 `reset --hard` 的 fetch 与未推送提交保护；release-skill 补 notes.md 生成步骤与完整 bump 清单（package.json / VERSIONING.md / 根 README / 插件 README 横幅）；补 1.0.1 遗漏的四技能 description 重写记录 |
 | 1.0.1 | 2026-08-30 | review-skill 去除对归档流程 skill 的依赖，description 精简；四技能 description 重写（触发词卫生） |
