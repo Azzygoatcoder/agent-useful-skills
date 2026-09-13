@@ -13,11 +13,12 @@ office_tools.py — Office 文件处理（Excel 优先 + pandoc 写作）
   python office_tools.py extract pdf 论文.pdf --outdir 图/ [--pages 1,3] [--min-size 250] [--min-kb 5]
   python office_tools.py extract docx 报告.docx --outdir 图/
   python office_tools.py extract pptx 汇报.pptx --outdir 图/
-  python office_tools.py classify 图/        # vision 分类幸存图：价值图 vs 装饰图
+  python office_tools.py classify 图/        # 独立模型分类幸存图：价值图 vs 装饰图
   python office_tools.py md2docx 笔记.md out.docx [--toc] [--reference-doc 模板.docx]
   python office_tools.py md2pptx 讲稿.md out.pptx [--slide-level 2] [--reference-doc 模板.pptx]
 
-extract 免费过滤: 尺寸/文件大小/页眉页脚 + 「Figure N」标题邻近标记([CAP]); 只对幸存图用 vision(classify)
+extract 免费过滤: 尺寸/文件大小/页眉页脚 + 「Figure N」标题邻近标记([CAP]); 只对幸存图做分类(classify)
+看图: 宿主模型自带原生视觉，直接读图即可；classify 走独立模型（Qwen3-VL）是为了给出"非作者模型"的判断
 
 md→docx/pptx 走 pandoc: LaTeX 公式($..$)→Word/PPT 原生 OMML 方程; --reference-doc 控样式(中文宋体/黑体)
 场景: 阅读报告/防撞车矩阵(markdown 表) → Excel 分析；实验数据 → 统计；Excel → markdown 回写笔记；markdown 写作 → Word/PPT
@@ -297,23 +298,38 @@ def extract_pptx(path, outdir):
 
 
 def cmd_classify(args):
-    """对幸存图用 vision 分类：价值图 vs 装饰图（只在 extract 过滤后跑，省 vision 调用）。"""
+    """对幸存图用独立模型（vision.py）分类：价值图 vs 装饰图（只在 extract 过滤后跑，省调用）。
+
+    走独立模型而不是原生读图，是因为"这张图值不值得留"是要给出**非作者模型**的判断。
+    """
     import glob, subprocess
+    if not os.path.isdir(args.dir):
+        sys.exit(f"目录不存在：{args.dir}")
     files = sorted(glob.glob(os.path.join(args.dir, "*.png")) + glob.glob(os.path.join(args.dir, "*.jpg"))
                    + glob.glob(os.path.join(args.dir, "*.jpeg")))
     vision = args.vision or os.path.join(os.path.dirname(os.path.abspath(__file__)), "vision.py")
     if not files:
         print("目录里没有图"); return
-    print(f"=== vision 分类 {len(files)} 张幸存图 ===")
+    print(f"=== 独立模型分类 {len(files)} 张幸存图 ===")
     prompt = ("一句话判断：这张图是信息图（架构图/数据图/机制图/表格，有内容价值）"
               "还是装饰图（logo/照片/美化图标，无内容价值）？"
               "输出格式：价值图 或 装饰图，然后一句话理由。")
+    failed = []
     for f in files:
         r = subprocess.run([sys.executable, vision, f, prompt],
                            capture_output=True, text=True, encoding="utf-8")
-        out = r.stdout.strip() or r.stderr.strip()
         print(f"--- {os.path.basename(f)} ---")
-        print(out)
+        # 失败必须显式暴露：此前只看 stdout/stdout 兜 stderr，导致 vision 报错时
+        # 把 traceback 当分类结果打印、且整体仍 exit 0（静默成功）
+        if r.returncode != 0 or not r.stdout.strip():
+            failed.append(os.path.basename(f))
+            err = (r.stderr or "").strip().splitlines()
+            print(f"  [失败] vision.py 退出码 {r.returncode}"
+                  + (f"：{err[-1]}" if err else "（无输出）"))
+            continue
+        print(r.stdout.strip())
+    if failed:
+        sys.exit(f"分类失败 {len(failed)}/{len(files)} 张：{', '.join(failed)}")
 
 
 def main():

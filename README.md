@@ -14,9 +14,9 @@
 
 | 原则 | 含义 |
 |------|------|
-| **验证环** | AI 生成的图/内容，用独立的跨模型检查兜底——vision 渲染复核、review 对抗评审。不盲信单次输出 |
+| **验证环** | AI 生成的图/内容，用**独立模型**兜底——vision 渲染复核、review 对抗评审。不盲信单次输出。注意这是"独立性"而非"补能力"：宿主模型自带的原生视觉已经能看图，但**同模型自评会继承同一套盲点**，所以复核仍要走另一个模型 |
 | **场景判定 + 自进化日志** | 每个 skill 先判「给谁看、什么深度」，每次实战把教训写回 skill，越用越强 |
-| **工具不堆积** | 新工具先问「有没有真正新增的能力」，有才吸收，重复轮子不装 |
+| **工具不堆积** | 新工具先问「有没有真正新增的能力」，有才吸收，重复轮子不装。**能力被宿主吸收后，工具要重新定位或退役**——例如原生视觉出现后 `vision.py` 从"代眼"改为"独立复核" |
 | **配置走 env** | 脚本优先读环境变量，兜底 Claude Code 本地设置。**仓库不硬编码任何供应商端点或密钥** |
 
 > **设计灵感**：科研骨架的设计哲学（跨模型评审循环、对抗验证）受 [ARIS](https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep)（arXiv:2605.03042）启发，未直接使用其代码。详见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
@@ -65,7 +65,7 @@ agent-useful-skills/
 
 | 脚本 | 用途 | 依赖 |
 |------|------|------|
-| vision.py | 识图（Qwen3-VL-32B，OpenAI 兼容） | `LLM_API_URL` + key（env） |
+| vision.py | **跨模型识图（独立第二意见）**——宿主模型已自带原生视觉，本脚本用于验证场景 | `LLM_API_URL` + key（env） |
 | review.py | 跨模型对抗评审（kill-argument 结构化 JSON，Qwen3.5-397B） | `LLM_API_URL` + key（env） |
 | gen-image-mcp.cjs | 通用生图 MCP server（OpenAI 兼容；`.cjs` 因仓库为 ESM） | `GEN_IMAGE_URL` / `GEN_IMAGE_PROVIDERS`（env） |
 | office_tools.py | Office 处理（Excel / pandoc md→docx/pptx / 提图） | openpyxl + pandoc（extras `[office]`） |
@@ -80,8 +80,9 @@ agent-useful-skills/
 ## 快速开始
 
 ```bash
-# 识图（环境变量配好 LLM_API_URL + key）
-python bin/vision.py <image_path> "描述这张图"
+# 识图：宿主模型（DeepSeek V4.1+）自带原生视觉，直接读图即可，无需脚本
+#   仅在需要「与作者模型不同的独立判断」时才调 vision.py（验证场景）
+python bin/vision.py <image_path> "这张图的渲染有没有错？"
 
 # markdown → Word（公式转 OMML 原生方程）
 python bin/office_tools.py md2docx 笔记.md 报告.docx --toc

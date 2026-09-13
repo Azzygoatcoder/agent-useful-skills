@@ -39,13 +39,13 @@ description: Use when 需要论文级架构图/流程图/示意图。产出可�
 
 1. **gpt-image-2 生成设计**（**仅场景 B2**）— 用 generate_image MCP（默认 provider）或详细 prompt。适合示意/机制/封面。
    - prompt 用 PDCF 结构：**类型 + 内容逻辑 + 风格hex + 负面限制**（白底/扁平/≤3-4色组/无3D）
-2. **提取显式规格（透明化，防黑盒）** — 用 Qwen3-VL 输出**完整结构 JSON**：所有节点/框（含**逐字英文文本，绝不翻译/改写/简化**）、箭头/连线（谁到谁+标签）、布局、视觉元素（图标/圆底数字等）。**规格先展示给用户确认**，缺什么提前指出——把"vision 读→写 XML"的黑盒变成可检查的显式规格
+2. **提取显式规格（透明化，防黑盒）** — **用原生读图直接读**（模型自带视觉，见 `using-superpowers/references/dsh-tools.md`），输出**完整结构 JSON**：所有节点/框（含**逐字英文文本，绝不翻译/改写/简化**）、箭头/连线（谁到谁+标签）、布局、视觉元素（图标/圆底数字等）。**规格先展示给用户确认**，缺什么提前指出——把"读图→写 XML"的黑盒变成可检查的显式规格
 3. **构造带样式 draw.io XML** — 按下方 XML 约定写 `.drawio`（本 skill 自带规范）。**严格英文逐字复刻**（主流论文是英文，不翻译）。从规格构造，规格里有什么就画什么，不自行增删
-4. **验证（布局）** — 用 drawio MCP 导出 PNG（`start_session` → `load_diagram` → `export_diagram`；本机装了 draw.io CLI 也可 `draw.io --export --format png`）→ `vision` 命令检查文字/布局/结构
-5. **一致性检查（仅 gpt-image-2 路线，即场景 B2 必做）** — 把【原图 gpt-image-2 产物】和【矢量图导出 PNG】**同时**喂给 Qwen3-VL，显式要求：
+4. **验证（布局）** — 用 drawio MCP 导出 PNG（`start_session` → `load_diagram` → `export_diagram`；本机装了 draw.io CLI 也可 `draw.io --export --format png`）→ **先用原生读图自检**（自查文字/布局/结构），需要独立判断时再走 `vision` 命令
+5. **一致性检查（仅 gpt-image-2 路线，即场景 B2 必做）** — 把【原图 gpt-image-2 产物】和【矢量图导出 PNG】**同时**喂给一个**独立模型**（`vision` 命令，Qwen3-VL-32B——**不是**作者模型，同模型自评会继承同一套盲点），显式要求：
    > "图A是原图，图B是矢量复刻。严格对比，逐条列出图B相比图A丢失/简化/改变的元素，重点关注文字省略、结构缺失、术语丢失。不要因为图B整洁就忽略差异。"
    有差异 → 修 `.drawio` → 重导 → 复检，直到差异最小化。
-   > 注意：该模型会**幻觉误报"缺失"**（实际存在）——报出的差异要单图细读交叉验证再改。
+   > 注意：独立模型会**幻觉误报"缺失"**（实际存在）——它报出的差异，用**原生读图**单图细读交叉验证再改。
 
 ## 论文级标准
 
@@ -62,7 +62,7 @@ description: Use when 需要论文级架构图/流程图/示意图。产出可�
 
 ## 验证分工
 
-- **布局/可读性** → vision.py 打分（目标 ≥8.5）
+- **布局/可读性** → **原生读图自检**（目标 ≥8.5）；需要独立判断时走 `vision.py` 独立模型打分
 - **语义正确性** → review.py（可选，ARIS 对抗评审）
 - 争议以项目文档为准（review 可能过度理论化）
 
@@ -91,7 +91,7 @@ description: Use when 需要论文级架构图/流程图/示意图。产出可�
 ## 工具
 
 - 生图：`generate_image` MCP（OpenAI 兼容，provider 由 env 配置）
-- 读图：`vision.py`（Qwen3-VL-32B，SiliconFlow）
+- 读图：**原生读图**（模型自带视觉）为首选；`vision.py`（Qwen3-VL-32B）用于**独立模型复核**
 - 导出：drawio MCP（`start_session` → `load_diagram` → `export_diagram` 出 PNG）；draw.io CLI（`draw.io --export --format png`，本机未装，以 MCP 为准）
 - 评审：`review.py`（可选）
 - 数据图：`bin/data_plot.py`（pandas/matplotlib 期刊样式 + 数据耦合保存 + 演示）

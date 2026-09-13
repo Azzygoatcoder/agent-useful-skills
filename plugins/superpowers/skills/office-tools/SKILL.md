@@ -32,19 +32,23 @@ office-tools md2pptx 讲稿.md 汇报.pptx [--slide-level 2] [--reference-doc �
 - **pptx 结构**：`#`=分节标题页、`##`=一页，输出原生文本框（可编辑，非图片）；公式同样 OMML
 - 重新生成默认模板：`pandoc -o reference.docx --print-default-data-file reference.docx` → `style-reference-docx`；模板可在 WPS/Word 手动微调后保存即生效
 
-## 关键能力：看图（模型无视觉，靠 vision 代理）
+## 关键能力：看图
 
-**模型不能直接看 Office/PDF 里的图**——正确链路：
+**宿主模型自带原生视觉**（DeepSeek V4.1+）——直接读图即可，不需要代理：
 
 ```
 office_tools extract pdf 论文.pdf --outdir 图/
-  → vision.py 图/p7_img957.png "这是什么图？"
-  → 模型通过 vision 描述理解图
+  → read_image 图/p7_img957.png            # 原生读图（首选）
+  → vision.py 图/p7_img957.png "这是什么图？"   # 跨模型第二意见（可选，见下）
 ```
 
 - PDF：默认提取嵌入图；`--pages 1,3` 渲染整页为 PNG
 - docx/pptx：提取内嵌图片
-- 依赖 `vision.py`（Qwen3-VL-32B，SiliconFlow）——读图的文字/结构说明走它，模型本身无视觉
+- **默认直接用原生读图**：更快、无外部依赖、能同时看多张
+- **`vision.py` 现在的定位是「跨模型第二意见」**（Qwen3-VL-32B，SiliconFlow），不是"代眼"：
+  当需要**与作者模型不同的独立判断**时才用（例如判"这张图值不值得留"、"渲染有没有错"）。
+  同模型自评会继承同一套盲点，独立模型才有信息量——这正是本仓库"验证环"的要点。
+  批量分类场景仍推荐 `classify`（两阶段过滤后只对幸存图调用，省 token）
 
 ### 拿论文原图：源码包优先（存在 LaTeX 源码版就直接拿）
 
@@ -57,16 +61,18 @@ python papers/arxiv_fetch.py source <id> --outdir 笔记/assets/
 
 `extract` 只在无源码包时作回退（区域渲染；`extract_image` 原始字节会拿复合图碎片，已弃用）。
 
-### 两阶段过滤（省 vision 调用）
+### 两阶段过滤（省 token / 省调用）
 
-不是所有图都值得 vision——`extract` 先免费滤装饰图，`classify` 只对幸存图花 vision：
+不是所有图都值得细看——`extract` 先用免费规则滤掉装饰图，只对幸存图细看：
 
 ```
 extract pdf 论文.pdf --outdir 图/        # 免费层：尺寸/文件大小/页眉页脚 + [CAP]Figure 标题标记
-classify 图/                              # vision 层：幸存图分类 价值图/装饰图
+classify 图/                              # 第二层：幸存图分类 价值图/装饰图（走 vision.py 独立模型）
 ```
 
-实测（CircuitFusion）：33 张 → 免费层留 5（滤 29 张照片/装饰条）→ vision 分类 3 价值 + 2 装饰（256×256 图标漏过免费层被 vision 揪出）。**只看论文本身有意义的图**。
+实测（CircuitFusion）：33 张 → 免费层留 5（滤 29 张照片/装饰条）→ 分类 3 价值 + 2 装饰（256×256 图标漏过免费层被揪出）。**只看论文本身有意义的图**。
+
+> 免费层仍然必做：它省的是**看图的次数**（33 次 → 5 次），无论用原生读图还是 `vision.py` 都省。
 
 ## 命令速查
 
@@ -102,3 +108,4 @@ office-tools md2pptx 讲稿.md 汇报.pptx [--slide-level 2] [--reference-doc �
 | 2026-08-06 | 图的价值分层 | 两阶段过滤：免费层（尺寸/文件大小/位置/[CAP] Figure 标题邻近）滤 ~88% 装饰图；`classify` 用 vision 二次揪出漏网图标（256×256 火焰/雪花）；只对幸存图花 vision |
 | 2026-08-06 | LaTeX 源包拿原图 | **`extract_image` 原始字节会拿复合图碎片**（Code\|Graph 只剩 Graph）——弃用；`extract` 区域渲染作回退；**首选 arXiv 源码包**（`arxiv_fetch.py source`，作者原图无渲染损耗、矢量保持） |
 | 2026-08-11 | 写作模块落地 | **Pandoc 路线**（winget 装 3.10.1）；`md2docx`/`md2pptx` 薄封装进 office_tools；**公式 docx/pptx 双出原生 OMML 方程**（实测冒烟）；Marp/Slidev pptx 导出=逐页扁平图片不可编辑→排除；`reference.docx` 预设中文字体（`style_reference_docx.py`：宋体正文/黑体标题/首行缩进2字符/1.5倍距） |
+| 2026-09-12 | **宿主模型获得原生视觉**（DeepSeek V4.1+） | 本技能「看图」一节原先的前提是"**模型无视觉，靠 vision 代理**"，该前提已失效——原生 `read_image` 可直接读图。改法：默认走原生读图（更快、无外部依赖、可多图同看）；`vision.py` 从"代眼"重新定位为**跨模型第二意见**（仅在需要与作者模型不同的独立判断时用）。**未删除 vision.py**：验证环要的是独立模型，同模型自评会继承同一套盲点，所以它的价值从"代眼"转移到"独立性"。免费两阶段过滤仍然保留——它省的是看图**次数**，与用哪种读图方式无关 |

@@ -58,4 +58,4 @@ description: Use when 用户要求读论文、写阅读报告、精读文献、�
 - 定位/搜索：WebSearch（已有）
 - 抓全文：WebFetch（arXiv HTML）/ 本地 PDF / alphaxiv LaTeX（公式）
 - 入库（可选，后续）：`arxiv_fetch.py`（搜索+元数据+PDF 下载）
-- 验证：`review.py`（语义对抗复核）/ `vision.py`（读图表）/ md-format-fixer
+- 验证：`review.py`（语义对抗复核）/ **原生读图**读图表（复核走 `vision.py` 独立模型）

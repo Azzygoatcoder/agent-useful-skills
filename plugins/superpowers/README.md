@@ -14,7 +14,7 @@
 
 | 模块 | skill / 工具 | 后端 |
 |------|-------------|------|
-| 识图 | vision.py | Qwen3-VL-32B |
+| 识图 | **原生读图**（模型自带视觉）；复核走 vision.py | 宿主模型 / Qwen3-VL-32B |
 | 生图 | generate_image MCP | gpt-image-2 |
 | 评审 | review.py | Qwen3.5-397B |
 | 绘图 | figure-drawing + diagram-design | drawio / HTML+SVG |

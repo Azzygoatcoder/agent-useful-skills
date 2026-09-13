@@ -6,14 +6,19 @@
 
 | # | 模块 | 触发 | 入口 | 后端/依赖 | 验证方式 |
 |---|------|------|------|-----------|----------|
-| 1 | 识图 | 看图/OCR/读图表 | `vision` 命令 / analyze_image MCP | Qwen3-VL-32B（SiliconFlow） | —（本身是验证器） |
-| 2 | 生图 | 概念图/封面/graphical abstract | generate_image MCP | gpt-image-2（私有供应商走 env） | vision 复检 |
+| 1 | 识图/复核 | 看图/OCR/读图表 | **原生读图**（模型自带视觉）· 复核走 `vision` 命令 | 宿主模型（DeepSeek V4.1+ 原生）；复核 Qwen3-VL-32B | 跨模型独立复核（同模型自评有共同盲点） |
+| 2 | 生图 | 概念图/封面/graphical abstract | generate_image MCP | gpt-image-2（私有供应商走 env） | 原生读图初检 + vision 独立复检 |
 | 3 | 评审 | 对抗审查/语义复核 | `review` 命令 | Qwen3.5-397B（SiliconFlow） | kill-argument 结构化 JSON |
-| 4 | 绘图 | 架构/流程/数据图 | drawio MCP / fig2drawio / data-plot / diagram-design / fireworks-tech-graph | 多后端 | consistency-check 一致性 + vision |
-| 5 | 文献 | 读论文/写阅读报告 | paper-reading skill | arxiv_fetch.py | 置信度 frontmatter + review 复核 |
+| 4 | 绘图 | 架构/流程/数据图 | drawio MCP / fig2drawio / data-plot | 多后端 | consistency-check 一致性 + 原生读图复核 |
+| 5 | 文献 | 读论文/写阅读报告 | paper-reading skill | arxiv_fetch.py（仓库外，可选） | 置信度 frontmatter + review 复核 |
 | 6 | 写作 PDF | 论文/报告/学位论文 | paper-writing skill | latex-templates + latex-build | review 评审 + 页数检查 |
 | 7 | 写作 Office | Word/PPT/Excel | office-tools skill | office_tools.py + pandoc | 公式→OMML 原生方程 |
 | — | 审计（横向） | 安全审计 | code-security-audit skill | security_audit_tools.py | review 跨模型对抗 |
+
+> **识图模块的定位变更（2026-09-12）**：宿主模型（DeepSeek V4.1+）已自带原生视觉，原先
+> "模型无视觉 → 靠 vision.py 代理"的前提失效。现在**看懂一张图直接用原生读图**；
+> `vision.py` 保留但重新定位为**跨模型独立复核**——它服务的是"验证环"的独立性，
+> 而不是补足看的能力。（能力被宿主吸收 ≠ 工具作废，而是角色改变；详见 README 设计原则。）
 
 ## 典型跨模块流程
 
