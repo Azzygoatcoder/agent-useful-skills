@@ -380,6 +380,42 @@ def check_references(root: Path):
     return errors, warnings
 
 
+def check_diagrams(root: Path):
+    """配图一致性：每个 `assets/*.html` 图源必须有同步的派生素材。
+
+    配图约定是「HTML 唯一图源，SVG/PNG 由 bin/export_diagram.py 派生」。
+    此前这条靠手工，漂移过两次（孤儿 HTML/SVG、缺 xmlns 导致 <img> 不渲染）。
+    """
+    errors = []
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from export_diagram import build_svg  # 复用同一份导出逻辑，避免两处漂移
+    except Exception as exc:  # pragma: no cover
+        return [f"无法加载 export_diagram.py（配图一致性校验跳过）：{exc}"]
+
+    sources = sorted(p for p in root.rglob("assets/*.html") if "archive" not in p.parts)
+    for html in sources:
+        rel = html.relative_to(root).as_posix()
+        text = html.read_text(encoding="utf-8")
+        # 只有内联 SVG 的才是"配图图源"；报告模板等普通 HTML 不参与派生
+        if not re.search(r"<svg\b", text):
+            continue
+        svg_path = html.with_suffix(".svg")
+        if not svg_path.is_file():
+            errors.append(f"{rel}: 缺派生 SVG（跑 python bin/export_diagram.py {rel}）")
+            continue
+        try:
+            want = build_svg(text)
+        except ValueError as exc:
+            errors.append(f"{rel}: {exc}")
+            continue
+        if svg_path.read_text(encoding="utf-8") != want:
+            errors.append(
+                f"{rel}: 派生 SVG 已漂移（跑 python bin/export_diagram.py {rel} 重新导出）"
+            )
+    return errors
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="校验 SKILL.md 是否符合 DSH/AgentSkills 规则")
     ap.add_argument("--root", type=Path, default=Path(__file__).resolve().parent.parent, help="仓库根目录")
@@ -409,6 +445,9 @@ def main() -> int:
         n_warn += 1
         problems.append(f"  warn   {w}")
     for e in check_plugin_manifests(root):
+        n_err += 1
+        problems.append(f"  ERROR  {e}")
+    for e in check_diagrams(root):
         n_err += 1
         problems.append(f"  ERROR  {e}")
 

@@ -74,7 +74,8 @@ agent-useful-skills/
 | security_audit_tools.py | 安全审计报告状态管理（自动探测报告路径） | 标准库 |
 | fig2drawio.py | 论文图 → draw.io 复刻 | `LLM_API_URL` + key（env） |
 | consistency_check.py | 矢量图一致性检查 | `LLM_API_URL` + key（env） |
-| check_skills.py | 校验全部 SKILL.md 是否符合 DSH/AgentSkills 规则（name/description/单层发现/运行时耦合） | 标准库 |
+| check_skills.py | 校验 SKILL.md 是否符合 DSH 规则 + 清单/交叉引用/插件版本/配图一致性（`--strict`、`--no-refs`） | 标准库 |
+| export_diagram.py | 配图导出：HTML 图源 → 独立 `.svg`（补 xmlns/prolog/webfont）；`--png` 出 PNG、`--check` 查漂移 | 标准库（PNG 需 rsvg-convert） |
 | redeploy-skills.ps1 | DSH 技能链接部署/自愈/校验（Windows junction / POSIX symlink，`-Check` 只读模式） | pwsh 7 |
 
 ## 快速开始

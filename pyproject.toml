@@ -43,6 +43,7 @@ security-audit-tools = "security_audit_tools:main"
 data-plot = "data_plot:main"
 style-reference-docx = "style_reference_docx:main"
 check-skills = "check_skills:main"
+export-diagram = "export_diagram:main"
 
 [tool.setuptools]
 package-dir = {"" = "bin"}
@@ -58,4 +59,5 @@ py-modules = [
     "security_audit_tools",
     "style_reference_docx",
     "check_skills",
+    "export_diagram",
 ]
