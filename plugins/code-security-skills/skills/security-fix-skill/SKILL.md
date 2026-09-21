@@ -37,7 +37,11 @@ file-level impact, then ask which priority level to start with.
 
 For each finding in the current priority:
 
-1. **Read the affected code** at the specified file and line range
+1. **Read the affected code** at the specified file and line range — but **先做包含性检查**：
+   把注解里的 `FILE` 解析（`resolve`）后确认它落在项目根之内，**落在根外就拒绝读取并报告**。
+   报告是可被篡改的输入；`FILE=../../../../…` 这类值不该把你导向仓库外的文件。
+   （`bin/security_audit_tools.py validate` 会校验格式，但**它不在你读取的这条路径上** ——
+   这一步是 agent 自己的责任，不是校验器的。）
 2. **Apply the remediation** from the audit doc — prefer minimal, targeted
    edits that don't change behavior
 3. **Verify the fix** by re-reading the changed lines
@@ -77,7 +81,10 @@ After committing each priority batch:
 After all priorities are committed and marked, verify the state:
 1. Run `/reaudit status` to confirm all findings are `fixed` or `deferred`
 2. Run `python bin/security_audit_tools.py validate` — 契约校验（`fixed` 必须有 `COMMIT` 且是
-   HEAD 祖先、`FILE` 存在、`LINES` 不越界）。**这一步会抓出"标记了 fixed 但改的是另一个文件"**
+   HEAD 祖先、`FILE` 存在且是安全的仓库根相对路径、`LINES` 不越界、`## Coverage` 非空、
+   标题与注解一一对账）。**注意它校验的是注解契约，不是修复内容** —— 它**不**检查那个
+   `COMMIT` 是否真的改过 `FILE`，所以"validate PASS"不等于"修复确实落在记录的文件里"。
+   修复落在别的文件（如共享工具里加了 guard）时，仍须人工确认 `FILE` 是否该改。
 3. If any findings remain `open` or `not-fixed`, ask the user how to handle
 4. Optionally run a targeted `/reaudit` on the changed files only to double-check
    no regressions were introduced
@@ -110,8 +117,10 @@ outbound requests.
 subprocesses; add `os.chmod(path, 0o600)` on Unix after writing credential
 files.
 
-**Temp file cleanup** — wrap `tempfile.mkdtemp()` / `NamedTemporaryFile` with
-`atexit.register()` for cleanup even on crash paths.
+**Temp file cleanup** — prefer the context manager (`with tempfile.TemporaryDirectory()`),
+which runs on every exit path. `atexit.register()` alone does **not** cover crash paths:
+it does not run on `SIGKILL`, `os._exit()`, or a hard crash. Use it only as a supplement,
+and never claim it makes crashed runs leave no temp files.
 
 ### Edge cases
 

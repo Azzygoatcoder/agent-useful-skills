@@ -295,6 +295,11 @@ REPO_OWNED_ROOTS = {"bin", "skills", "plugins", "latex-templates", "assets", "ar
 # 幽灵 skill 引用：只认「反引号包住的名字 + 紧跟 skill/技能」这一种确定写法。
 # 负向前瞻排除文件续写（`xxx-code-review-checklist.md` 里 -checklist 会被误当后缀词），
 # 避免把 `code-review-checklist.md`、prose 里的 "code-review methodology" 误报。
+#
+# 已知局限（有意为之）：**不带反引号**的幽灵引用查不出来 —— 实测漏网过一次
+# （README 里「单 PR 委托 code-review」）。曾试过按裸名字匹配，结果误报 7 条
+# 噪声（dev-workflow 自述合并历史、上游 superpowers 文件），故回退。反引号是
+# 精度与召回的折中点：带反引号的归档名引用由下方 archived 检查兜住，裸词不查。
 CITE_RE = re.compile(
     r"`([a-z][a-z0-9]*(?:-[a-z0-9]+)+)`(?![-\w.])"
     r"\s*(?:skill|技能)"
@@ -388,12 +393,21 @@ def check_references(root: Path):
                 errors.append(
                     f"{rel}: 引用了不存在的 skill '{cand}'（既不在注册清单也不在 archive/）"
                 )
-            # 把已归档 skill 当现役宣传
-            for a in sorted(archived):
-                for pat in (rf"`{re.escape(a)}`\s+skill", rf"委托\s+`{re.escape(a)}`"):
-                    if re.search(pat, text):
+            # 把已归档 skill 当现役引用。
+            #   原来只认两种搭配（`name` skill / 委托 `name`），实测**漏网**：
+            #   `走 \`review-skill\`（自带代码评审清单）` —— 反引号名字后面跟的是「（」，
+            #   不构成 "skill" 后缀词，于是逃过 CITE_RE。
+            #   改为只认**反引号**：反引号本身就是引用信号，精度够；裸词匹配会淹在噪音里
+            #   （实测 `dev-workflow` 开头「原先拆成 issue-skill / pr-skill / …」是历史叙述，
+            #   不是现役引用，裸词规则会误报 4 条）。上游 fork（superpowers）按仓库策略
+            #   不做内容校验，一并跳过（否则 codex-tools.md 又误报 3 条）。
+            #   在 `phantom`（已遮蔽自进化日志）上搜：那里记录的是历史，不该报错。
+            if "superpowers" not in d.parts:
+                for a in sorted(archived):
+                    for m in re.finditer(rf"`{re.escape(a)}`(?![-\w])", phantom):
+                        lineno = phantom.count("\n", 0, m.start()) + 1
                         warnings.append(
-                            f"{rel}: 把已归档的 '{a}' 当现役技能引用（默认不注册）"
+                            f"{rel}:{lineno}: 把已归档的 '{a}' 当现役引用（默认不注册）"
                         )
     return errors, warnings
 

@@ -122,6 +122,15 @@ def load_report(path):
     return findings, lines
 
 
+def _annot_safe(v):
+    """注解值不许含 `-->`。
+
+    否则 mark-fixed 会写出**自我闭合**的注释行（`… FILE=a--> LINES=… -->`），
+    下一次解析就把那条 finding 静默丢掉 —— 工具会改坏自己的输入。
+    """
+    return str(v).replace("-->", "--")
+
+
 def render_annot(f):
     """按固定字段顺序渲染注解行，只写有值的字段。
 
@@ -129,19 +138,19 @@ def render_annot(f):
     """
     fields = []
     if f.get("verdict"):
-        fields.append(f"VERDICT={f['verdict']}")
+        fields.append(f"VERDICT={_annot_safe(f['verdict'])}")
     if f.get("status"):
-        fields.append(f"STATUS={f['status']}")
+        fields.append(f"STATUS={_annot_safe(f['status'])}")
     if f.get("severity"):
-        fields.append(f"SEVERITY={f['severity']}")
-    fields.append(f"FILE={f['file']}")
-    fields.append(f"LINES={f['lines']}")
+        fields.append(f"SEVERITY={_annot_safe(f['severity'])}")
+    fields.append(f"FILE={_annot_safe(f['file'])}")
+    fields.append(f"LINES={_annot_safe(f['lines'])}")
     if f.get("commit"):
-        fields.append(f"COMMIT={f['commit']}")
+        fields.append(f"COMMIT={_annot_safe(f['commit'])}")
     if f.get("reason"):
-        fields.append(f'REASON="{f["reason"]}"')
+        fields.append(f'REASON="{_annot_safe(f["reason"])}"')
     if f.get("blocker"):
-        fields.append(f'BLOCKER="{f["blocker"]}"')
+        fields.append(f'BLOCKER="{_annot_safe(f["blocker"])}"')
     return "<!-- AUDIT:" + " ".join(fields) + " -->"
 
 
@@ -220,7 +229,8 @@ def cmd_status(args):
 
 def cmd_diff_filter(args):
     findings, _ = load_report(resolve_report(args.report))
-    r = subprocess.run(["git", "diff", "--name-only", f"{args.commit}..HEAD"],
+    commit = _rev_arg(args.commit, "--commit")
+    r = subprocess.run(["git", "diff", "--name-only", f"{commit}..HEAD"],
                        capture_output=True, text=True, encoding="utf-8")
     if r.returncode != 0:
         sys.exit(f"git diff 失败:\n{r.stderr}")
@@ -250,7 +260,22 @@ def _have_git():
     return r.returncode == 0 and r.stdout.strip() == "true"
 
 
+def _rev_arg(value, what):
+    """rev 参数不许以 `-` 开头。
+
+    list 形式挡得住 shell 注入，**挡不住选项注入**：`diff-filter --commit=--output=/tmp/x`
+    会让 git 把 diff 重定向进文件、stdout 变空，于是工具报「0 个变更 / 全部未变更」并 exit 0
+    —— 重审会因此跳过全部重读（安全工具里的静默漏报路径）。
+    """
+    if not value or value.startswith("-"):
+        sys.exit(f"{what} 不能以 '-' 开头（避免被当成 git 选项）: {value!r}")
+    return value
+
+
 def _is_ancestor(commit):
+    # 以 `-` 开头的值可能被当成 git 选项；报「不是祖先」而不是崩，让上层给出契约错误。
+    if not commit or commit.startswith("-"):
+        return False
     r = subprocess.run(["git", "merge-base", "--is-ancestor", commit, "HEAD"],
                        capture_output=True, text=True)
     return r.returncode == 0
@@ -276,12 +301,15 @@ def _parse_spans(lines_str):
     返回 [(a, b), ...]；格式非法返回 None。支持逗号是必要的 —— 历史报告里出现过
     `LINES=475,510`（两个独立位置），旧正则 `[\\d-]+` 匹配不上，那条 finding
     会被**静默丢掉**（status/list/count 全都少一条）。
+
+    位数上限 9：`int()` 在 py3.11+ 对 >4300 位直接抛 ValueError（门禁崩而不是报契约错误），
+    在 py3.9 上是二次方（可拖死那一 leg）。超限一律按格式非法处理。
     """
     if not lines_str:
         return None
     spans = []
     for part in lines_str.split(","):
-        m = re.fullmatch(r"(\d+)(?:-(\d+))?", part.strip())
+        m = re.fullmatch(r"(\d{1,9})(?:-(\d{1,9}))?", part.strip())
         if not m:
             return None
         a = int(m.group(1))
@@ -318,6 +346,47 @@ def _baseline_rewritten(lines):
     """
     return any(re.match(r"^\*\*Provenance:\*\*\s*baseline-rewritten\b", ln.strip())
                for ln in lines)
+
+
+def _audit_reconcile(lines, findings):
+    """对账：每个 `### ` 标题都要有一条**可解析**的注解；每条 `<!-- AUDIT:` 行都要被解析到。
+
+    没有这一步，一条写歪的注解（字段错序 / 多一个字段 / 缺 LINES）会让该 finding
+    **整条跳过全部逐条检查**，而 validate 照样打印 `PASS: N findings` —— 门禁退化成摆设。
+    围栏代码块内不查（报告可能引用注解格式示例）。
+    """
+    errs = []
+    parsed = {f["line"] for f in findings}
+
+    # 标记出围栏代码块内的行号
+    in_fence = set()
+    fenced = False
+    for i, ln in enumerate(lines):
+        if ln.strip().startswith("```"):
+            fenced = not fenced
+            in_fence.add(i)
+            continue
+        if fenced:
+            in_fence.add(i)
+
+    heading_idx = [i for i, ln in enumerate(lines) if HEADING_RE.match(ln.strip())]
+    for i in heading_idx:
+        nxt = next((j for j in heading_idx if j > i), len(lines))
+        if not any(j in parsed for j in range(i + 1, nxt)):
+            sid = HEADING_RE.match(lines[i].strip()).group(1)
+            errs.append(f"第 {i+1} 行标题 {sid} 之后没有**可解析**的注解 —— "
+                        f"该 finding 跳过了全部契约检查（核对字段顺序与拼写）")
+
+    for i, ln in enumerate(lines):
+        if i in in_fence or i in parsed:
+            continue
+        # 剥掉行内代码：报告正文常引用注解格式做示例（`<!-- AUDIT:... FILE=<path> -->`），
+        # 那是散文不是注解 —— 不剥就会把自己的文档判成坏注解。
+        stripped = re.sub(r"`[^`]*`", "", ln)
+        if "<!--" in stripped and "AUDIT:" in stripped:
+            errs.append(f"第 {i+1} 行的 <!-- AUDIT: --> 注解无法解析 —— "
+                        f"字段须按 VERDICT? STATUS? SEVERITY? FILE= LINES= COMMIT? REASON? BLOCKER? 的顺序")
+    return errs
 
 
 def _has_coverage_section(lines):
@@ -359,6 +428,10 @@ def cmd_validate(args):
     if not findings:
         errs.append("报告里没有任何 finding（需要 `### <PREFIX>-<N>` 标题 + 紧随其后的 <!-- AUDIT:... --> 注解）")
 
+    # 0. 标题 ↔ 注解对账。必须最先跑：一条解析不了的注解会让该 finding 整条跳过
+    #    下面所有逐条检查，而 validate 仍会打印 PASS。
+    errs.extend(_audit_reconcile(lines, findings))
+
     # 1. ID
     seen = {}
     for f in findings:
@@ -395,24 +468,35 @@ def cmd_validate(args):
             errs.append(f"{loc}: STATUS '{f['status']}' 非法（{'/'.join(STATUSES)}）")
 
         # 4. FILE（基准 = git 顶层，与 git diff 输出一致）
+        #    abs_path 只在**全部围栏通过后**才赋值 —— 唯一的 stat/读点（第 5 步）必须由
+        #    同一个谓词门住。旧写法是「围栏只 append 错误、读却照做」，于是 validate 成了
+        #    任意可读文件的「存在性 + 行数」oracle（实测能越界读到仓库外文件的行数）。
         rel = f["file"]
+        abs_path = None
+        root_real = os.path.realpath(src_root)
         if not _safe_repo_path(rel):
             errs.append(f"{loc}: FILE '{rel}' 不是安全的仓库根相对 POSIX 路径"
                         f"（禁绝对路径/盘符/反斜杠/`..`/`~`）")
         else:
-            abs_path = os.path.join(src_root, rel)
-            if not os.path.isfile(abs_path):
+            cand = os.path.join(src_root, rel)
+            # 词法围栏不够：仓库内的符号链接同样会解析到根外。
+            cand_real = os.path.realpath(cand)
+            if not (cand_real == root_real or cand_real.startswith(root_real + os.sep)):
+                errs.append(f"{loc}: FILE '{rel}' 实际解析到仓库外（{cand_real}）")
+            elif not os.path.isfile(cand):
                 errs.append(f"{loc}: FILE '{rel}' 不存在"
                             f"（基准 = git 顶层 {src_root}；若报告是按子目录基准写的，"
                             f"每条 FILE 都要带该子目录前缀）")
+            else:
+                abs_path = cand
 
-        # 5. LINES
+        # 5. LINES —— 只在 FILE 通过全部围栏之后才 stat/读
         spans = _parse_spans(f["lines"])
         if spans is None:
             errs.append(f"{loc}: LINES '{f['lines']}' 格式应为 N、A-B，"
-                        f"或逗号分隔的多个 span")
-        elif os.path.isfile(os.path.join(src_root, rel)):
-            total = _count_lines(os.path.join(src_root, rel))
+                        f"或逗号分隔的多个 span（单段最长 9 位）")
+        elif abs_path is not None:
+            total = _count_lines(abs_path)
             if total is not None:
                 for a, b in spans:
                     if b > total:

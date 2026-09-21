@@ -208,6 +208,53 @@ for label, path, expect in cases:
     check(f"{label} -> exit 1 且报错", ok,
           f"exit={code} err={err.strip().splitlines()[-1][:140] if err.strip() else '(空)'}")
 
+# --- 独立复核（2026-09-21）提出的四条，逐条锁成回归 ---
+
+# META-2：解析不了的注解让该 finding 整条跳过检查，而 validate 仍打印 PASS
+bad_annot = mk("unparseable.md",
+               ent("PATH-1 — ok",
+                   f"<!-- AUDIT:STATUS=open SEVERITY=low FILE={TARGET} LINES=1-5 -->")
+               + ent("PATH-8 — 尾部多一个字段",
+                     "<!-- AUDIT:STATUS=open SEVERITY=low FILE=../../../../x LINES=1-5 NOTE=oops -->"))
+code, out, err = run_sat(["validate", "--report", str(bad_annot)])
+check("解析不了的注解不得静默放行", code == 1 and "可解析" in err, f"exit={code}")
+check("解析不了的注解不得打印 PASS", "PASS" not in out, out.strip()[:80])
+
+# PATH-3：围栏失败之后**不得再 stat/读**该文件。
+#   用「带 `..` 段、但解析后确实指向仓库内一个真实文件」的路径：旧实现（围栏只 append
+#   错误、读却照做）必然读出来并打印真实行数，所以这个测试不是空转；同时也避开了
+#   跨盘 os.path.relpath 不可移植的问题（Windows 上临时目录在 C:、仓库在 G:）。
+trap = mk("guard-trap.md", ent("PATH-9 — probe",
+                               "<!-- AUDIT:STATUS=open SEVERITY=low "
+                               "FILE=plugins/../README.md LINES=1-9999 -->"))
+code, out, err = run_sat(["validate", "--report", str(trap)])
+check("不安全 FILE（含 `..` 段）被拒", code == 1 and "不是安全的仓库根相对" in err, f"exit={code}")
+check("围栏失败后不再 stat/读该文件", "实际行数" not in err and "不存在" not in err,
+      err.strip().splitlines()[-1][:120] if err.strip() else "(空)")
+
+# 对照组：合法 FILE + 越界 LINES 必须报出真实行数 —— 证明上面那条读取通道本身是通的，
+# 否则「没读到」可能只是因为路径不存在，测试就退化成了空转。
+ctrl = mk("guard-ctrl.md", ent("PATH-10 — probe",
+                               f"<!-- AUDIT:STATUS=open SEVERITY=low FILE={TARGET} "
+                               f"LINES=1-999999 -->"))
+code, out, err = run_sat(["validate", "--report", str(ctrl)])
+check("对照：合法 FILE 的越界 LINES 报真实行数",
+      code == 1 and "实际行数" in err, f"exit={code}")
+
+# RES-1：超长数字不该让门禁崩（py3.11+ int() 有 4300 位上限）
+huge = mk("huge.md", ent("RES-9 — probe",
+                         f"<!-- AUDIT:STATUS=open SEVERITY=low FILE={TARGET} "
+                         f"LINES=1-{'9' * 5000} -->"))
+code, out, err = run_sat(["validate", "--report", str(huge)])
+check("超长 LINES 报契约错误而非崩溃",
+      code == 1 and "最长 9 位" in err and "Traceback" not in err, f"exit={code}")
+
+# CMD-1：--commit 不得被当成 git 选项（--output= 会把 diff 重定向进文件、静默返回 0 个变更）
+code, out, err = run_sat(["diff-filter", "--commit=--output=" + str(vtmp / "pwn"),
+                          "--report", str(good)])
+check("--commit 前导 '-' 被拒", code not in (0, None), f"exit={code}")
+check("选项注入未产生文件", not (vtmp / "pwn..HEAD").exists())
+
 print()
 if failures:
     print(f"{len(failures)} FAILED: {', '.join(failures)}")
