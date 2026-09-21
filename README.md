@@ -235,4 +235,16 @@ export VISION_PROVIDER="sensenova"   # 自动带出 URL + 模型 + SENSENOVA_API
 
 ## 许可证
 
-[MIT](LICENSE) · 第三方内容归属见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)
+**[MIT](LICENSE)**（Copyright (c) 2026 Azzygoatcoder）—— 根 LICENSE **覆盖全仓库**。
+
+嵌套单元的处理规则（完整策略见 [LICENSING.md](LICENSING.md)）：
+
+| 单元 | 授权 |
+|------|------|
+| `bin/` `tests/` `assets/` `archive/` `latex-templates/` `skills/*` | 随根 MIT，**不单独放 LICENSE** |
+| `plugins/code-security-skills/` `plugins/dev-workflow/` | 各自另带一份与根一致的 MIT LICENSE —— 它们可被单独安装（`claude plugins install <repo> --path plugins/X`），授权要随代码走 |
+| `plugins/superpowers/` | **保留上游署名**：MIT © 2025 Jesse Vincent（obra/superpowers 的 fork），**不覆盖**成本仓库署名 |
+| 第三方内容 | 按各自许可，登记于 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) |
+
+> `latex-templates/` 是自写的最小骨架（ICML / NeurIPS 官方 `.sty` 刻意不 vendoring），
+> 不涉及 IEEE / ICML / NeurIPS / SJTU 的模板许可。
