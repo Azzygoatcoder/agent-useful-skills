@@ -5,7 +5,12 @@
     "也常常不在 DSH 的发现路径（~/.dsh/skills、~/.agents/skills、<项目>/.dsh/skills）。",
     "结果是「技能里写着 use diagram-design，但 DSH 里的模型根本看不到它」——靠记忆碰运气。",
     "本文件把依赖变成可校验的声明：bin/check_external.py 会跨根查找、校验 DSH frontmatter 契约、",
-    "检测悬空链接；redeploy-skills.ps1 会把找到的软链接进 DSH 技能根（找不到就跳过并提示）。"
+    "检测悬空链接；redeploy-skills.ps1 会把找到的软链接进 DSH 技能根（找不到就跳过并提示）。",
+    "",
+    "⚠️ 这里的 external 指【发现路径在仓库外】，与版权归属无关。作者自研但外置的 skill",
+    "不该长期留在这里——2026-09-21 已把 md-format-fixer 收进本仓库（原先就误当成第三方了）。",
+    "upstreamLicense 是对应 THIRD-PARTY-NOTICES.md 的署名依据。注意：**没有任何门禁校验",
+    "这个字段与那份说明是否一致**（check_external.py 根本不读它），所以它靠人工维护。"
   ],
   "searchRoots": [
     "~/.claude/skills",
@@ -17,42 +22,33 @@
       "name": "diagram-design",
       "kind": "plugin",
       "repoHint": "G:/AI4Application/diagram-design",
-      "purpose": "editorial 级图表（27 类型，HTML+内联 SVG）；draw.io 不擅长的 sequence/state/ER/loop/radar/swimlane",
+      "purpose": "editorial 级图表（40 类型，HTML+内联 SVG）；draw.io 不擅长的 sequence/state/ER/loop/radar/swimlane",
       "usedBy": [
         "figure-drawing",
-        "dev-workflow"
+        "dev-workflow",
+        "code-security-audit"
       ],
-      "upstreamLicense": "MIT（见仓库 THIRD-PARTY-NOTICES.md）"
+      "upstreamLicense": "MIT（Copyright (c) 2025 Cathryn Lavery）。上游 https://github.com/cathrynlavery/diagram-design。code-security-skills 的 audit-workflow / verdict-model 两张图即依其设计系统自绘、并用其校验脚本产出；未引用其打包的图标素材（Tabler/Simple Icons/log-z），故无需转承那三项许可。详见 THIRD-PARTY-NOTICES.md"
     },
     {
       "name": "fireworks-tech-graph",
       "kind": "skill-at-root",
       "repoHint": "G:/AI4Application/fireworks-tech-graph",
-      "purpose": "技术/Agent 架构图：语义形状（LLM 双边框 / Agent 六边形 / 向量库环柱）+ 有界验证环",
+      "purpose": "技术/Agent 架构图：7 视觉风格 / 14 图类型 + 完整 UML，输出 SVG（可经 rsvg-convert 导 PNG）",
       "usedBy": [
         "figure-drawing"
       ],
-      "upstreamLicense": "见上游仓库 LICENSE"
-    },
-    {
-      "name": "md-format-fixer",
-      "kind": "skill-at-root",
-      "repoHint": "~/.claude/skills/md-format-fixer",
-      "purpose": "markdown 排版修正（阅读报告定稿后跑）",
-      "usedBy": [
-        "paper-reading"
-      ],
-      "upstreamLicense": "未知（未在 THIRD-PARTY-NOTICES.md 声明，建议补）"
+      "upstreamLicense": "MIT。本地副本的 git remote 指向 https://github.com/ninehills/fireworks-tech-graph；其 README 内又指向更上游 https://github.com/yizhiyanhua-ai/fireworks-tech-graph。详见 THIRD-PARTY-NOTICES.md"
     },
     {
       "name": "wiretext",
       "kind": "skill-at-root",
       "repoHint": null,
-      "purpose": "快速 unicode 示意图（diagram-design 自己推荐的轻量替代）",
+      "purpose": "快速 unicode/文本线框图（diagram-design 自己推荐的轻量替代）",
       "usedBy": [
         "diagram-design（上游内部引用）"
       ],
-      "upstreamLicense": "未知",
+      "upstreamLicense": "未知 —— 公开可查的身份是「Wiretext：Figma, but everything is text」这一文本线框图工具（作者 Daniel Howells），见 https://www.producthunt.com/products/wiretext 与 gihyo 报道 https://gihyo.jp/article/2026/02/text-based-wireframe-tools；未找到公开仓库与许可声明。本机未安装、未使用",
       "optional": true,
       "note": "本机未安装。它是 diagram-design 内部推荐的替代工具，不是本仓库技能的硬依赖；未装时 diagram-design 自身的用法不受影响。"
     }

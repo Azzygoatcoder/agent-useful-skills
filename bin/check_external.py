@@ -10,10 +10,14 @@
   python check_external.py --dsh-skills <dir>   # 指定 DSH 技能根（默认 ~/.dsh/skills）
 
 为什么需要它：本仓库的技能会引用若干个**不随仓库分发**的外部 skill（diagram-design /
-fireworks-tech-graph / md-format-fixer …）。它们常常只装在 ~/.claude/skills，
+fireworks-tech-graph / wiretext …）。它们常常只装在 ~/.claude/skills，
 而 DSH 只发现 ~/.dsh/skills、~/.agents/skills 与 <项目>/.dsh/skills ——
 于是「技能里写着 use diagram-design，DSH 里的模型却看不到它」。
 本脚本把这件事从"靠记得"变成"可校验"。
+
+注意：本文件里的 external 指【发现路径在仓库外】，**与版权归属无关**。
+作者自研但外置的 skill 不该长期留在清单里 —— 2026-09-21 已把 md-format-fixer
+（实为自研，原先误当第三方）收进 skills/ 并从此处移出。
 
 DSH frontmatter 契约（与 bin/check_skills.py 同一套规则，此处只报不影响发现的硬问题 + 明显异常）：
   - name 存在、kebab-case、且与目录名一致（不一致 DSH 仍能发现，但按契约应当一致）

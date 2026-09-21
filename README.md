@@ -197,7 +197,7 @@ pwsh bin/redeploy-skills.ps1 -Check            # 部署完整性（CI 先造 DSH
 ## 外部 skill 依赖（`skills.external.json`）
 
 有些能力引用了**不随本仓库分发**的第三方 skill（`diagram-design` / `fireworks-tech-graph` /
-`md-format-fixer`），它们常只装在 `~/.claude/skills`。而 **DSH 只发现** `~/.dsh/skills`、
+`wiretext`），它们常只装在 `~/.claude/skills`。而 **DSH 只发现** `~/.dsh/skills`、
 `~/.agents/skills` 与 `<项目>/.dsh/skills` —— 于是会出现「技能里写着 use diagram-design，
 DSH 里的模型却看不到它」。这在以前是**靠模型记得**，属于验证环唯一没覆盖的地方。
 
@@ -213,10 +213,13 @@ pwsh  bin/redeploy-skills.ps1 -Check   # 只读校验（会打印外部依赖小
   也不会让部署炸掉；引用它们的技能各自写明回退路线
 - **悬空自愈**：链接目标消失后再部署会重建（与 `node_modules` 那个 pnpm-hash 悬空坑同类问题）
 - **契约校验**：外部 skill 的 frontmatter 也按 DSH 规则查（`name` / `description` /
-  legacy 键），并提示 catalog 截断风险 —— 实测 `diagram-design` 646 字符、
-  `md-format-fixer` 532 字符，**都超过 DSH 的 500 上限**，挂进 catalog 会被截断
+  legacy 键），并提示 catalog 截断风险 —— 实测 `diagram-design` 646 字符，**超过 DSH 的 500 上限**，挂进 catalog 会被截断
 - `wiretext` 标为**可选**（本机未安装；它只是 `diagram-design` 内部推荐的轻量替代，
   不是本仓库技能的硬依赖）
+- **`md-format-fixer` 已收进本仓库**（`skills/md-format-fixer/`，2026-09-21）：它原先按
+  外部依赖声明，但实为**本仓库作者自研**——`external` 指「发现路径在仓库外」，与版权归属无关。
+  收编时顺带把 `description` 从 532 字符压到 500 以内（它当时也是 catalog 截断的反例之一），
+  并补上正文引用却一直缺失的 `references/fix-log.md`
 
 ## 密钥配置
 
