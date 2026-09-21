@@ -35,9 +35,15 @@
    - 修复到位 → `STATUS=fixed COMMIT=<hash>`
    - 仍可利用 → `STATUS=not-fixed`
    - 部分解决 → `STATUS=partial`
-5. **未变更文件的 finding 保持原状** — 不重读、不改 STATUS。
+5. **未变更文件的 finding** — 不重读，但**"文件没变"不等于"结论仍然成立"**：
+   - 修复可能落在**别的文件**（共享工具里加了 guard，或换了调用方）→ 本条 `FILE` 没变，
+     结论却已过时，`fixed` 会永远认不出来。因此对 `open` / `not-fixed` / `partial` 的
+     finding，额外扫一遍 `git diff <audit-commit>..HEAD` 的**新增行**，找 remediation
+     里描述的那个 guard —— 而不是只看 `FILE` 是否落在变更集里。
+   - 其余保持原 STATUS，但**必须在重审段的「未重验，沿用旧结论」表里逐条列出**
+     （见 `references/audit-report-template.md`）—— 静默沿用旧结论是漏报来源。
 6. **查回归** — 扫 diff 新增行里是否引入新的漏洞模式。
-7. **写重审段** — 结构见 `references/audit-report-template.md`。
+7. **写重审段** — 结构见 `references/audit-report-template.md`，**含「未重验」表**。
 
 ---
 
@@ -68,21 +74,41 @@
 
 不读文件的进度概览：
 
-1. 扫所有 `AUDIT:STATUS=` 注解
-2. 按状态与严重度计数，输出：
+1. 扫所有 `AUDIT:` 注解
+2. **先按认识态（VERDICT）计数，再按修复态（STATUS）计数**，输出：
 
 ```
-  Status      Count
-  ─────────   ─────
+=== 认识态 (7 findings) ===
+  confirmed        6
+  needs-validation 1
+
+=== 修复进度 (分母 6，已排除 rejected) ===
   fixed       5
   open        1
-  deferred    1
-  ─────────   ─────
-  Total       7     (71% fixed)
+  ────────────
+  合计        6     (83% fixed)
 ```
 
-有 `not-fixed` / `partial` 时逐条列出 ID 与严重度（**不要只输出三种状态**——那样
+3. 修复进度的**分母不含 `rejected`** —— 已推翻的候选不是工作项，不该拉低百分比。
+
+有 `not-fixed` / `partial` 时逐条列出 ID 与严重度（**不要只输出三种状态** —— 那样
 `partial`/`not-fixed` 会被静默吞掉）。
+
+---
+
+## Prior-run 纪律（多轮审计之间）
+
+多轮审计最典型的失败模式，是把上一轮的结论当成这一轮的证据。规则：
+
+| 上一轮状态 | 本轮怎么处理 |
+|-----------|-------------|
+| `confirmed` + 相关源码/条件**未变** | 可沿用同一 ID 与结论，但**仍须过一遍本轮 Phase 2 验证**（换 agent 复核引用行）。不重复进修复队列 |
+| `confirmed` + 相关源码**已变** | **当作新工作重建**，不要在 diff-filter 里跳过 —— 旧结论只说明当时成立 |
+| `needs-validation` | 仍缺那个仓库外事实 → 保留 `BLOCKER` 并在本轮再试；**不因为"上轮记过"就跳过** |
+| `rejected` | 只抑制**那一条具体断言**（同文件同行同根因）。证据一变就是新工作 |
+| `deferred` / `out_of_scope` | 是优先级输入，**不是抑制键** |
+
+**「上一轮记过了」永远不是本轮不覆盖的理由。** `FILE` / `LINES` 指向同一位置，也不代表那条路径仍然成立 —— 必须有本轮的复核记录。
 
 ---
 
@@ -90,17 +116,23 @@
 
 ```markdown
 ### SSRF-1 — tool_fetch_url navigates to unvalidated URL
-<!-- AUDIT:STATUS=open SEVERITY=high FILE=src/module.py LINES=100-120 -->
+<!-- AUDIT:VERDICT=confirmed STATUS=open SEVERITY=high FILE=src/module.py LINES=100-120 -->
+
+### PROMPT-1 — 检索内容可覆盖系统指令
+<!-- AUDIT:VERDICT=needs-validation STATUS=open FILE=src/rag.py LINES=88-104 BLOCKER="线上是否启用工具调用未知" -->
 ```
 
-字段：`STATUS` / `SEVERITY` / `FILE` / `LINES` / `COMMIT`（可选）/ `REASON`（可选）。
-完整字段规范见 `references/vulnerability-patterns.md` §18。
+字段：`VERDICT`（缺省 `confirmed`）/ `STATUS` / `SEVERITY`（仅 confirmed）/ `FILE` / `LINES` / `COMMIT`（可选）/ `REASON`（可选）/ `BLOCKER`（needs-validation 必填）。
+**`VERDICT` 是认识态、`STATUS` 是修复态，两条正交轴** —— `deferred` 是"暂不修"，不是"测不出来"。
+完整字段规范见 `references/vulnerability-patterns.md` §18；`bin/security_audit_tools.py validate` 是这套契约的执行者。
 
 ## 用脚本做状态管理（推荐，替代手动 grep/Edit）
 
 ```bash
-security-audit-tools list [--status open] [--severity high] [--json]
+security-audit-tools list [--status open] [--severity high] [--verdict needs-validation] [--json]
 security-audit-tools status
+security-audit-tools validate        # 契约校验：VERDICT/SEVERITY 互斥、FILE 存在、
+                                     # LINES 合法、fixed 的 COMMIT 是 HEAD 祖先、报告含 ## Coverage
 security-audit-tools diff-filter --commit <上次审计hash>
 security-audit-tools mark-fixed SSRF-1 PATH-1
 security-audit-tools mark-deferred SSRF-1 --reason "等上游库修 TLS 默认值"

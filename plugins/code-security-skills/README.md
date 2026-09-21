@@ -2,7 +2,7 @@
 
 [![verify](https://github.com/Azzygoatcoder/agent-useful-skills/actions/workflows/verify.yml/badge.svg?branch=master)](https://github.com/Azzygoatcoder/agent-useful-skills/actions/workflows/verify.yml)
 
-> Claude Code 插件 — 系统化代码安全审计技能集，覆盖漏洞发现、验证、报告、修复、重审计全流程。**v1.4.3**
+> Claude Code 插件 — 系统化代码安全审计技能集，覆盖漏洞发现、验证、报告、修复、重审计全流程。**v1.5.0**
 
 ![安全审计 skill 工作流](assets/audit-workflow.svg)
 
@@ -42,6 +42,7 @@ graph TD
 ```
 
 **轻量操作**（不改代码，只改注解行）：
+
 | 命令 | 作用 |
 |------|------|
 | `/reaudit mark-fixed SSRF-1` | 标记为已修复 |
@@ -208,20 +209,21 @@ flowchart LR
 
 ### 输出格式
 
-审计报告目前仅输出 Markdown。可考虑支持 SARIF 格式（GitHub Code Scanning 兼容）或 JSON，方便接入 CI/CD 流水线。
+审计报告目前仅输出 Markdown（注解即契约，由 `bin/security_audit_tools.py validate` 校验）。**刻意不引入 `findings.json` + JSON Schema** —— 那会让结论变成"第二份真相"，两份不一致时的排查成本高于收益。若将来要接 GitHub Code Scanning，再考虑从注解派生 SARIF。
 
 ### 自动化测试与 Eval 基准
 
-技能的 SKILL.md 内容变更后，缺乏自动化验证手段——无法确认改动的 prompt 是否仍然产生一致的审计质量。未来可建立 eval 基准（含已知漏洞的样例仓库），量化变更对审计召回率和精确率的影响。
+技能的 SKILL.md 内容变更后，缺乏自动化验证手段——无法确认改动的 prompt 是否仍然产生一致的审计质量。**注解契约已有回归保护**（`tests/test_bin_contracts.py` 的 validate 用例），但 prompt 质量本身仍无 eval 基准。未来可建立含已知漏洞的样例仓库，量化变更对审计召回率和精确率的影响。
 
 ### 依赖校验
 
-4 个技能间通过 `name` 字段字符串引用（如 "load and follow `code-security-audit`"），缺少编译时校验。如果父技能改名，子技能会在运行时而非加载时暴露问题。
+技能间通过 `name` 字段字符串引用（如 "load and follow `code-security-audit`"），`bin/check_skills.py` 能抓悬空引用（曾抓出 `review-skill` 已归档却仍被 3 处引用），但没有编译时保证。
 
 ## 版本历史
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| **1.5.0** | 2026-09-20 | 对标 `cloudflare/security-audit-skill` 的**轻量升级：只取认识论，不取工程学**（未采纳其 132 KB 的 `findings.json`+Schema+双校验器、覆盖率账本 JSON、11 步 artifact promotion、OS 沙箱前置）。①注解加 `VERDICT`（`confirmed` 缺省 / `needs-validation` / `rejected`）—— 认识态与修复态拆成两条正交轴，**不确定就不许定级**，`rejected` 留档以免下轮重打；缺省值保证旧报告零改动兼容。②`security_audit_tools.py validate` 七类契约检查接 CI；给"历史被重写"留唯一显式豁免 `**Provenance:** baseline-rewritten`。③`vulnerability-patterns.md` 加「不算 Finding 判别表」17 行 + 4 条全局规则，直击 30–40% 误报。④报告模板加必填 `## Coverage`、`## Needs Validation` 与「未重验」表。⑤Phase 2 独立性：发现者不得复核自己，Critical/High 换新 agent 回读源码。⑥Phase 4 修两个洞（修复落在别的文件时 `fixed` 认不出、静默沿用旧结论）。⑦新增 `attack-surfaces.md`（AI/供应链/桌面-IPC/资源耗尽/数据隔离，懒加载）与 Agent D（业务逻辑/功能滥用/链式信任边界/Wildcard）。**validate 上线当天在自身仓库抓出 3 个真 bug**：`SECRET-3` 因 `LINES=475,510` 被旧正则静默丢弃、报告 `FILE` 为子目录基准会让 diff-filter 静默漏判、`PATH-2` 行号随 SKILL.md 瘦身失效 |
 | **1.4.3** | 2026-09-12 | 工作流图用 diagram-design 重制（`audit-workflow.{html,svg,png}`），替换 v14 三件套：①修图里的**幽灵引用**——分流框原写"单 PR → code-review"，而 `code-review` 是全仓库不存在的技能，改为 `dev-workflow`；②补齐导出规范——旧 `.svg` 缺 `xmlns`，作为 `<img>` 嵌入时不会渲染，且 HTML/SVG 两件是孤儿；现在 HTML 为唯一图源、SVG/PNG 由它导出，README 只引用 SVG |
 | **1.4.2** | 2026-09-12 | 修复：`security-audit-tools` 控制台命令此前从未可用——文件名为连字符，无法作为 `security_audit_tools` 模块导入，导致 `pip install -e .` 整个失败。文件改名为 `bin/security_audit_tools.py`；README 补 monorepo-root 前置说明 |
 | **1.4.1** | 2026-08-30 | SKILL.md 详细阶段拆到 references/audit-workflow.md，主文件瘦身；description 去掉流程摘要 |

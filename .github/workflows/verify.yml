@@ -54,9 +54,21 @@ jobs:
         shell: bash
         run: python bin/check_skills.py --strict
 
-      - name: bin 契约离线自测（review 截断 / 审计状态 --reason 往返）
+      - name: bin 契约离线自测（review 截断 / 审计状态往返 / validate 契约）
         shell: bash
         run: python tests/test_bin_contracts.py
+
+      - name: 审计报告注解契约（VERDICT/SEVERITY 互斥 / FILE 存在 / fixed 的 COMMIT 是祖先）
+        shell: bash
+        run: |
+          # SECURITY_AUDIT.md 按设计被插件 .gitignore 排除（报告只留本地），
+          # 所以 CI 上通常没有报告可校验 —— 有则校验，没有则明确跳过，而不是假装通过。
+          report="plugins/code-security-skills/docs/SECURITY_AUDIT.md"
+          if [ -f "$report" ]; then
+            python bin/security_audit_tools.py validate --report "$report"
+          else
+            echo "跳过：$report 不在仓库中（.gitignore 有意排除审计报告）"
+          fi
 
       - name: 解析插件依赖（verify-plugin 需要 dsh-skill-filesystem）
         shell: bash

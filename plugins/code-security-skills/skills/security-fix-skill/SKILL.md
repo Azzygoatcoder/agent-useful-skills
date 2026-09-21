@@ -18,9 +18,17 @@ real-world findings in a Python web application project.
 ### Step 1: Load the audit report
 
 Read the audit document (typically `docs/SECURITY_AUDIT.md`). Extract:
-- Each finding's ID, severity, affected file, line number, and description
+- Each finding's ID, **`VERDICT`**, severity, affected file, line number, and description
 - The remediation code or instructions provided
 - The priority rating (P1 = fix immediately, P4 = address when convenient)
+
+**只处理 `VERDICT=confirmed` 的 finding**（注解缺省即为 confirmed）：
+
+- `VERDICT=needs-validation` —— 卡在一个**仓库外的事实**上。先解决注解里的 `BLOCKER=`，
+  **不要动手改代码** —— 盲目"修"一个还没确认的问题，只会引入回归。
+- `VERDICT=rejected` —— 已推翻，不进修复队列。
+
+用 `bin/security_audit_tools.py list --verdict confirmed` 可直接过滤。
 
 Present a summary table to the user showing severity distribution and
 file-level impact, then ask which priority level to start with.
@@ -68,8 +76,10 @@ After committing each priority batch:
 
 After all priorities are committed and marked, verify the state:
 1. Run `/reaudit status` to confirm all findings are `fixed` or `deferred`
-2. If any findings remain `open` or `not-fixed`, ask the user how to handle
-3. Optionally run a targeted `/reaudit` on the changed files only to double-check
+2. Run `python bin/security_audit_tools.py validate` — 契约校验（`fixed` 必须有 `COMMIT` 且是
+   HEAD 祖先、`FILE` 存在、`LINES` 不越界）。**这一步会抓出"标记了 fixed 但改的是另一个文件"**
+3. If any findings remain `open` or `not-fixed`, ask the user how to handle
+4. Optionally run a targeted `/reaudit` on the changed files only to double-check
    no regressions were introduced
 
 ### Common fix patterns
@@ -120,3 +130,4 @@ files.
 | 日期 | 学习来源 | 吸收的模式 |
 |------|---------|-----------|
 | 2026-09-12 | DSH 技能清单审计 | 本技能是四个审计技能里唯一缺 `## 自进化日志` 的（audit / reaudit 同批补上）；同时确认 `pip install -e .` 的 console 入口只在脚本可导入时才生效，修完 `security_audit_tools` 后 `/security-fix` 的状态追踪才真正可用 |
+| 2026-09-20 | 对标 cloudflare/security-audit-skill（轻量升级） | Step 1 改为**只处理 `VERDICT=confirmed`**：`needs-validation` 卡在仓库外事实上，先解 `BLOCKER=` 而**不要动手改代码** —— 盲目"修"一个还没确认的问题只会引入回归；`rejected` 不进队列。Step 6 加入 `security_audit_tools.py validate`，专门抓"标记了 fixed 但改的是另一个文件" |

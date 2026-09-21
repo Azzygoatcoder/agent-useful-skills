@@ -1,9 +1,17 @@
-"""Offline self-test for bin/review.py's truncation contract.
+"""Offline self-test for bin/review.py's truncation contract, and for
+bin/security_audit_tools.py's annotation contract.
 
-Stubs the LLM call so no network/key is needed. Asserts:
+review.py: stubs the LLM call so no network/key is needed. Asserts:
   - untruncated input  -> exit 0, payload["truncated"] is False
   - truncated input    -> exit 3, payload carries original/reviewed/max chars
   - the verdict object is preserved under the wrapper
+
+security_audit_tools.py:
+  - mark-deferred --reason round-trips, and `list` surfaces it
+  - `validate`: VERDICT/SEVERITY 互斥、BLOCKER/REASON 必填、FILE 必须是安全的
+    仓库根相对路径且存在、LINES 不越界（含逗号 span）、表外 ID 前缀、
+    `fixed` 必须有 COMMIT、`## Coverage` 段非空
+  - 旧注解（无 VERDICT）缺省为 confirmed —— 向后兼容
 
 Run: python tests/test_bin_contracts.py
 """
@@ -124,6 +132,81 @@ check("--reason persisted (not dropped)", f is not None and f.get("reason") == r
       repr(f.get("reason") if f else None))
 code, out, _ = run_sat(["list", "--report", str(report)])
 check("list surfaces the reason", "原因" in out and reason in out)
+
+print("security_audit_tools.py validate 契约")
+
+vtmp = pathlib.Path(tempfile.mkdtemp(prefix="aus-validate-"))
+COV = "## Coverage\n\n| 面 | 类 | 结果 |\n|---|---|---|\n| bin/ | injection | 覆盖 |\n\n"
+TARGET = "bin/security_audit_tools.py"  # 存在，且是仓库根相对路径
+
+
+def mk(name, findings_md, with_coverage=True):
+    p = vtmp / name
+    p.write_text("# T\n\n" + (COV if with_coverage else "") + findings_md, encoding="utf-8")
+    return p
+
+
+def ent(heading, annot):
+    return f"### {heading}\n{annot}\n\n"
+
+
+# 好报告：PATH-1 无 VERDICT（旧格式，应缺省 confirmed）+ PROMPT-1 带逗号 span
+good = mk("good.md",
+          ent("PATH-1 — x", f"<!-- AUDIT:STATUS=open SEVERITY=low FILE={TARGET} LINES=1-5 -->")
+          + ent("PROMPT-1 — y",
+                f'<!-- AUDIT:VERDICT=needs-validation STATUS=open FILE={TARGET} '
+                f'LINES=10,20 BLOCKER="线上配置未知" -->'))
+code, out, err = run_sat(["validate", "--report", str(good)])
+check("好报告 -> exit 0", code == 0, f"exit={code} err={err.strip()[:200]}")
+check("好报告 -> PASS", "PASS" in out, out.strip()[:120])
+check("两条 finding 都被数到（含逗号 span）", "2 findings" in out, out.strip()[:120])
+
+# 缺 VERDICT 的旧注解 -> 认识态缺省 confirmed（向后兼容）
+old_findings, _ = sat.load_report(str(good))
+check("旧注解缺省 VERDICT=confirmed",
+      next(f for f in old_findings if f["id"] == "PATH-1")["verdict"] == "confirmed")
+
+cases = [
+    ("needs-validation 带 SEVERITY",
+     mk("sev.md", ent("PROMPT-2 — z",
+                      f'<!-- AUDIT:VERDICT=needs-validation STATUS=open SEVERITY=high '
+                      f'FILE={TARGET} LINES=1-5 BLOCKER="x" -->')),
+     "不得带 SEVERITY"),
+    ("needs-validation 缺 BLOCKER",
+     mk("blk.md", ent("PROMPT-3 — z",
+                      f"<!-- AUDIT:VERDICT=needs-validation STATUS=open FILE={TARGET} LINES=1-5 -->")),
+     "必须有 BLOCKER"),
+    ("rejected 缺 REASON",
+     mk("rej.md", ent("XSS-9 — z", f"<!-- AUDIT:VERDICT=rejected FILE={TARGET} LINES=1-5 -->")),
+     "必须有 REASON"),
+    ("FILE 是穿越路径",
+     mk("trav.md", ent("PATH-9 — z",
+                       "<!-- AUDIT:STATUS=open SEVERITY=low FILE=../../etc/passwd LINES=1-5 -->")),
+     "不是安全的仓库根相对"),
+    ("LINES 超出文件行数",
+     mk("lines.md", ent("DEP-9 — z",
+                        f"<!-- AUDIT:STATUS=open SEVERITY=low FILE={TARGET} LINES=1-999999 -->")),
+     "超出"),
+    ("fixed 缺 COMMIT",
+     mk("nocommit.md", ent("CMD-9 — z",
+                           f"<!-- AUDIT:STATUS=fixed SEVERITY=low FILE={TARGET} LINES=1-5 -->")),
+     "必须有 COMMIT"),
+    ("表外 ID 前缀",
+     mk("prefix.md", ent("FOO-1 — z",
+                         f"<!-- AUDIT:STATUS=open SEVERITY=low FILE={TARGET} LINES=1-5 -->")),
+     "不在 ID 前缀表内"),
+    ("缺 ## Coverage 段",
+     mk("nocov.md", ent("BAR-1 — z",
+                        f"<!-- AUDIT:STATUS=open SEVERITY=low FILE={TARGET} LINES=1-5 -->"),
+        with_coverage=False),
+     "## Coverage"),
+]
+
+for label, path, expect in cases:
+    code, out, err = run_sat(["validate", "--report", str(path)])
+    ok = code == 1 and expect in err
+    check(f"{label} -> exit 1 且报错", ok,
+          f"exit={code} err={err.strip().splitlines()[-1][:140] if err.strip() else '(空)'}")
 
 print()
 if failures:
