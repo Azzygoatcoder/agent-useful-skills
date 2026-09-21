@@ -87,11 +87,20 @@ def export_one(html_path: str, want_png: bool = False) -> tuple[bool, str]:
             note += "；跳过 PNG（未找到 rsvg-convert / magick）"
         else:
             png_path = base + ".png"
+            # 判据必须用 basename 且忽略大小写/扩展名：Windows 上 shutil.which 返回的是
+            # `…\rsvg-convert.EXE`，`conv.endswith("rsvg-convert")` 恒为 False，于是走成
+            # magick 的参数形式（把输出路径当输入文件）→ PNG 导出静默失败(1)。
+            tool = os.path.basename(conv).lower()
             cmd = ([conv, "-w", "1360", svg_path, "-o", png_path]
-                   if conv.endswith("rsvg-convert")
+                   if tool.startswith("rsvg-convert")
                    else [conv, svg_path, png_path])
             r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
-            note += "；PNG " + ("已导出" if r.returncode == 0 else f"失败({r.returncode})")
+            if r.returncode == 0:
+                note += "；PNG 已导出"
+            else:
+                err = (r.stderr or r.stdout or "").strip().splitlines()
+                hint = err[-1][:80] if err else ""
+                note += f"；PNG 失败({r.returncode})" + (f" {hint}" if hint else "")
     return changed, f"{os.path.relpath(svg_path)}: {note}"
 
 

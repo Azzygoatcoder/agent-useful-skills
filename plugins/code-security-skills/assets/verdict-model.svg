@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1000 1400" xmlns="http://www.w3.org/2000/svg" role="img"
+       aria-labelledby="verdict-model-title verdict-model-desc">
+    <title id="verdict-model-title">安全审计注解的双轴状态模型</title>
+    <desc id="verdict-model-desc">状态机图：候选 finding 先进入认识态轴，按证据是否充分、是否缺仓库外事实、是否可证据化不成立，分别进入 confirmed、needs-validation 或 rejected；needs-validation 必填 BLOCKER 且禁止定级，其 BLOCKER 澄清后可复评回 confirmed，rejected 必填 REASON 并留档。只有 confirmed 入得了修复队列的 open，open 再收敛为 fixed、not-fixed、partial 或 deferred 四种修复态；图下方由 validate 门带列出八条契约检查（第 0 条是标题↔注解对账，先于逐条校验运行）与一条注解形状示例。</desc>
+    <defs><style>@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;display=swap');</style>
+      <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>
+      </marker>
+      <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#eb6c36"/>
+      </marker>
+      <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/>
+      </marker>
+    </defs>
+
+    <!-- background -->
+    <rect width="100%" height="100%" fill="#f5f5f5"/>
+
+    <!-- ============ zones first (painted under everything) ============ -->
+    <rect x="24" y="80" width="952" height="448" rx="8" fill="none" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+    <text x="48" y="108" fill="#7a8399" font-size="8" font-family="'Geist Mono', ui-monospace, Consolas, monospace"
+          letter-spacing="0.14em">AXIS I · VERDICT</text>
+    <text x="160" y="108" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif">认识态</text>
+
+    <rect x="24" y="580" width="952" height="396" rx="8" fill="none" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+    <text x="48" y="608" fill="#7a8399" font-size="8" font-family="'Geist Mono', ui-monospace, Consolas, monospace"
+          letter-spacing="0.14em">AXIS II · STATUS</text>
+    <text x="166" y="608" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif">修复态</text>
+
+    <!-- ============ transitions (before labels and states) ============ -->
+
+    <!-- start -> 候选 -->
+    <line x1="500" y1="152" x2="500" y2="176" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- 候选 -> confirmed -->
+    <path d="M 450 268 V 284 Q 450 292 442 292 H 168 Q 160 292 160 300 V 384"
+          fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <!-- 候选 -> needs-validation -->
+    <line x1="500" y1="268" x2="500" y2="384" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <!-- 候选 -> rejected -->
+    <path d="M 550 268 V 284 Q 550 292 558 292 H 832 Q 840 292 840 300 V 384"
+          fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- needs-validation -> confirmed (BLOCKER 澄清后复评) -->
+    <path d="M 470 384 V 358 Q 470 350 462 350 H 208 Q 200 350 200 358 V 384"
+          fill="none" stroke="#4f5d75" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+
+    <!-- confirmed -> open (coral: the load-bearing 只收 confirmed rule) -->
+    <path d="M 160 500 V 548 Q 160 556 168 556 H 492 Q 500 556 500 564 V 644"
+          fill="none" stroke="#eb6c36" stroke-width="2" marker-end="url(#arrow-accent)"/>
+
+    <!-- open -> fixed / not-fixed / partial / deferred -->
+    <path d="M 440 736 V 752 Q 440 760 432 760 H 148 Q 140 760 140 768 V 852"
+          fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <path d="M 480 736 V 776 Q 480 784 472 784 H 388 Q 380 784 380 792 V 852"
+          fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <path d="M 520 736 V 776 Q 520 784 528 784 H 612 Q 620 784 620 792 V 852"
+          fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <path d="M 560 736 V 752 Q 560 760 568 760 H 852 Q 860 760 860 768 V 852"
+          fill="none" stroke="#4f5d75" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <!-- ============ transition labels (masked, 6-10px clear of the stroke) ============ -->
+
+    <rect x="276" y="268" width="56" height="16" rx="2" fill="#f5f5f5"/>
+    <text x="304" y="281" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">证据充分</text>
+
+    <rect x="508" y="320" width="80" height="16" rx="2" fill="#f5f5f5"/>
+    <text x="548" y="333" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">缺仓库外事实</text>
+
+    <rect x="648" y="268" width="92" height="16" rx="2" fill="#f5f5f5"/>
+    <text x="694" y="281" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">可证据化不成立</text>
+
+    <rect x="264" y="324" width="132" height="16" rx="2" fill="#f5f5f5"/>
+    <text x="330" y="337" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">BLOCKER 澄清 → 复评</text>
+
+    <rect x="288" y="536" width="84" height="12" rx="2" fill="#f5f5f5"/>
+    <text x="330" y="545" fill="#7a8399" font-size="8" font-family="'Geist Mono', ui-monospace, Consolas, monospace"
+          text-anchor="middle" letter-spacing="0.06em">CONFIRMED·ONLY</text>
+
+    <!-- ============ states ============ -->
+
+    <!-- start dot -->
+    <circle cx="500" cy="148" r="6" fill="#2d3142"/>
+
+    <!-- 候选 -->
+    <rect x="400" y="176" width="200" height="92" rx="8" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+    <text x="500" y="208" fill="#2d3142" font-size="12" font-weight="600"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">候选 finding</text>
+    <text x="500" y="230" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">先定认识态，再谈定级</text>
+    <text x="500" y="250" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">不确定是合法出口</text>
+
+    <!-- confirmed -->
+    <rect x="40" y="384" width="240" height="116" rx="8" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+    <text x="160" y="416" fill="#2d3142" font-size="12" font-weight="600"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">confirmed</text>
+    <text x="160" y="438" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace"
+          text-anchor="middle">VERDICT=confirmed</text>
+    <text x="160" y="458" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">缺 VERDICT 即 confirmed</text>
+    <text x="160" y="478" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">旧报告零改动 · 只有它能定级</text>
+
+    <!-- needs-validation (focal) -->
+    <rect x="380" y="384" width="240" height="116" rx="8" fill="rgba(235,108,54,0.08)" stroke="#eb6c36" stroke-width="1.5"/>
+    <text x="500" y="416" fill="#2d3142" font-size="12" font-weight="600"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">needs-validation</text>
+    <text x="500" y="438" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace"
+          text-anchor="middle">VERDICT=needs-validation</text>
+    <text x="500" y="458" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">必填 BLOCKER= · 禁止定级</text>
+    <text x="500" y="478" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">等仓库外事实澄清</text>
+
+    <!-- rejected -->
+    <rect x="720" y="384" width="240" height="116" rx="8" fill="rgba(45,49,66,0.03)" stroke="rgba(45,49,66,0.30)" stroke-width="1"/>
+    <text x="840" y="416" fill="#2d3142" font-size="12" font-weight="600"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">rejected</text>
+    <text x="840" y="438" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace"
+          text-anchor="middle">VERDICT=rejected</text>
+    <text x="840" y="458" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">必填 REASON= · 留档</text>
+    <text x="840" y="478" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">不是删除误报 · 防重打</text>
+
+    <!-- open -->
+    <rect x="400" y="644" width="200" height="92" rx="8" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+    <text x="500" y="676" fill="#2d3142" font-size="12" font-weight="600"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">open</text>
+    <text x="500" y="698" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace"
+          text-anchor="middle">STATUS=open</text>
+    <text x="500" y="718" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">修复队列的入口</text>
+
+    <!-- fixed -->
+    <rect x="40" y="852" width="200" height="92" rx="8" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+    <text x="140" y="884" fill="#2d3142" font-size="12" font-weight="600"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">fixed</text>
+    <text x="140" y="906" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace"
+          text-anchor="middle">STATUS=fixed</text>
+    <text x="140" y="926" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">COMMIT 须为 HEAD 祖先</text>
+
+    <!-- not-fixed -->
+    <rect x="280" y="852" width="200" height="92" rx="8" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+    <text x="380" y="884" fill="#2d3142" font-size="12" font-weight="600"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">not-fixed</text>
+    <text x="380" y="906" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace"
+          text-anchor="middle">STATUS=not-fixed</text>
+    <text x="380" y="926" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">复验后问题仍在</text>
+
+    <!-- partial -->
+    <rect x="520" y="852" width="200" height="92" rx="8" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+    <text x="620" y="884" fill="#2d3142" font-size="12" font-weight="600"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">partial</text>
+    <text x="620" y="906" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace"
+          text-anchor="middle">STATUS=partial</text>
+    <text x="620" y="926" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">部分面已修，其余仍开</text>
+
+    <!-- deferred -->
+    <rect x="760" y="852" width="200" height="92" rx="8" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+    <text x="860" y="884" fill="#2d3142" font-size="12" font-weight="600"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">deferred</text>
+    <text x="860" y="906" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace"
+          text-anchor="middle">STATUS=deferred</text>
+    <text x="860" y="926" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif" text-anchor="middle">已知但本轮不修</text>
+
+    <!-- ============ validate gate band ============ -->
+    <rect x="24" y="1000" width="952" height="256" rx="8" fill="#ffffff" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+
+    <text x="48" y="1032" fill="#7a8399" font-size="8" font-family="'Geist Mono', ui-monospace, Consolas, monospace"
+          letter-spacing="0.14em">CONTRACT ENFORCER · CI</text>
+    <text x="204" y="1032" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif">契约执行者 · 8 条检查</text>
+    <text x="48" y="1062" fill="#2d3142" font-size="11" font-weight="500"
+          font-family="'Geist Mono', ui-monospace, Consolas, monospace">security_audit_tools.py validate</text>
+
+    <text x="48" y="1104" fill="#7a8399" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace">0</text>
+    <text x="68" y="1104" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif">标题↔注解对账（RECONCILE）· 先于逐条校验</text>
+    <text x="48" y="1132" fill="#7a8399" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace">1</text>
+    <text x="68" y="1132" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif">ID 前缀合法</text>
+    <text x="48" y="1160" fill="#7a8399" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace">2</text>
+    <text x="68" y="1160" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif">VERDICT-SEVERITY 互斥</text>
+    <text x="48" y="1188" fill="#7a8399" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace">3</text>
+    <text x="68" y="1188" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif">BLOCKER / REASON 必填</text>
+
+    <text x="504" y="1104" fill="#7a8399" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace">4</text>
+    <text x="524" y="1104" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif">FILE 存在且为仓库根相对路径</text>
+    <text x="504" y="1132" fill="#7a8399" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace">5</text>
+    <text x="524" y="1132" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif">LINES 不越界</text>
+    <text x="504" y="1160" fill="#7a8399" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace">6</text>
+    <text x="524" y="1160" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif">fixed 的 COMMIT 须为 HEAD 祖先</text>
+    <text x="504" y="1188" fill="#7a8399" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace">7</text>
+    <text x="524" y="1188" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif">## Coverage 段非空</text>
+
+    <line x1="48" y1="1212" x2="952" y2="1212" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+    <text x="48" y="1240" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif">注解形状</text>
+    <text x="112" y="1240" fill="#4f5d75" font-size="9" font-family="'Geist Mono', ui-monospace, Consolas, monospace">&lt;!-- AUDIT:VERDICT=confirmed STATUS=open SEVERITY=high FILE=… LINES=… --&gt;</text>
+
+    <!-- ============ legend ============ -->
+    <line x1="40" y1="1300" x2="960" y2="1300" stroke="rgba(45,49,66,0.10)" stroke-width="0.8"/>
+    <text x="40" y="1324" fill="#4f5d75" font-size="8" font-family="'Geist Mono', ui-monospace, Consolas, monospace"
+          letter-spacing="0.14em">LEGEND</text>
+    <text x="92" y="1324" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif">形状承载类型</text>
+
+    <rect x="40" y="1340" width="44" height="20" rx="8" fill="#ffffff" stroke="#2d3142" stroke-width="1"/>
+    <text x="92" y="1354" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif">状态</text>
+
+    <circle cx="382" cy="1350" r="6" fill="#2d3142"/>
+    <text x="400" y="1354" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif">起始</text>
+
+    <rect x="680" y="1340" width="44" height="20" rx="4" fill="none" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>
+    <text x="732" y="1354" fill="#4f5d75" font-size="12" font-weight="500"
+          font-family="'Geist', 'Microsoft YaHei', system-ui, sans-serif">轴带</text>
+  </svg>

@@ -83,6 +83,7 @@ jobs:
         run: |
           python bin/export_diagram.py --check \
             plugins/code-security-skills/assets/audit-workflow.html \
+            plugins/code-security-skills/assets/verdict-model.html \
             plugins/dev-workflow/assets/push-access-flowchart.html
 
       - name: 外部依赖清单自检（验证清单可解析 + 逻辑可跑；不要求依赖存在）

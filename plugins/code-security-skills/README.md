@@ -2,11 +2,11 @@
 
 [![verify](https://github.com/Azzygoatcoder/agent-useful-skills/actions/workflows/verify.yml/badge.svg?branch=master)](https://github.com/Azzygoatcoder/agent-useful-skills/actions/workflows/verify.yml)
 
-> Claude Code 插件 — 系统化代码安全审计技能集，覆盖漏洞发现、验证、报告、修复、重审计全流程。**v1.5.0**
+> Claude Code 插件 — 系统化代码安全审计技能集，覆盖漏洞发现、验证、报告、修复、重审计全流程。**v1.5.1**
 
 ![安全审计 skill 工作流](assets/audit-workflow.svg)
 
-<sub>图源 `assets/audit-workflow.html`（单文件内联 SVG），`audit-workflow.svg` / `.png` 由它导出。</sub>
+<sub>图源 `assets/audit-workflow.html`（单文件内联 SVG），`audit-workflow.svg` / `.png` 由它导出。注解状态模型另见 `assets/verdict-model.svg`。</sub>
 
 ## 技能概览
 
@@ -72,7 +72,7 @@ Phase 4 不再全量重读所有文件。通过 `git diff <audit-commit>..HEAD` 
 
 ### 场景判定表
 
-对齐科研骨架新 skill 范式，顶部四路分流：快速扫描（L1）／全面审计（默认）／增量重审／单 PR 委托 code-review。深度宁高勿低。
+对齐科研骨架新 skill 范式，顶部四路分流：快速扫描（L1）／全面审计（默认）／增量重审／单 PR 委托 `dev-workflow`。深度宁高勿低。
 
 ### 跨模型对抗验证
 
@@ -139,20 +139,23 @@ New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\code-security
 
 ## 审计工作流
 
-```mermaid
-flowchart LR
-    subgraph Phase1[Phase 1: 并行探索]
-        A[Agent A<br/>密钥 & 凭据]
-        B[Agent B<br/>输入验证 & 注入]
-        C[Agent C<br/>认证/加密/依赖]
-    end
+![审计注解状态模型](assets/verdict-model.svg)
 
-    Phase1 --> Phase2[Phase 2: 深度验证<br/>确认漏洞真实性<br/>去重合并<br/>分配分类前缀 ID<br/>评估严重性]
-    Phase2 --> Phase3[Phase 3: 报告<br/>结构化审计报告 + 状态注解<br/>含修复代码]
-    Phase3 --> Phase4[Phase 4: 增量重审计<br/>只验证变更文件<br/>分类: fixed/not-fixed/partial/deferred<br/>自动更新状态注解]
-```
+<sub>图源 `assets/verdict-model.html`；完整流程图见顶部 `audit-workflow.svg`。两图均为 HTML 唯一图源、SVG/PNG 由 `bin/export_diagram.py` 派生。</sub>
 
-3 个并行 Explore agent 各司其职、独立搜索，Phase 2 去重合并。**覆盖范围远超单一 agent 的广度审计。**
+**两条正交轴**（规范见 `references/vulnerability-patterns.md` §18）：
+
+- **认识态 `VERDICT`** —— `confirmed`（缺省）/ `needs-validation` / `rejected`。
+  **只有 `confirmed` 允许带 `SEVERITY`**；`needs-validation` 必须写 `BLOCKER=` 且**禁止定级**；`rejected` 必须写 `REASON=` 并**留档**，以免下一轮重打同一枪。
+  注解缺省即 `confirmed` ⇒ **旧报告零改动兼容**。
+- **修复态 `STATUS`** —— `open` → `fixed` / `not-fixed` / `partial` / `deferred`。**只有 `confirmed` 进得了修复队列**；`needs-validation` 等仓库外事实澄清。
+
+契约由 `bin/security_audit_tools.py validate` 执行（8 条检查，已接入 CI）：
+**标题↔注解对账**（先跑，防止"解析不了的注解整条跳过检查却仍打印 PASS"）→ ID 前缀 → `VERDICT`↔`SEVERITY` 互斥 → `BLOCKER`/`REASON` 必填 → `FILE` 存在且是安全仓库根相对路径（含 `realpath` 包含性） → `LINES` 不越界 → `fixed` 的 `COMMIT` 须为 HEAD 祖先 → `## Coverage` 段非空。
+
+Phase 1 是 3 个并行 Explore agent（L2/L3 另加 Agent D：业务逻辑 / 功能滥用 / 链式信任边界 / Wildcard），Phase 2 先过「不算 Finding 判别表」再回读去重、跑 5 点 Self-Check，**Critical/High 另由没参与该条发现的 agent 回读源码复核** —— 发现者不得复核自己。
+
+> **不声明完整覆盖。** 报告必须含非空 `## Coverage` 段，交代审了哪些面、哪些面**未审计及原因**。单次运行 ≠ 完整覆盖。
 
 ## 漏洞覆盖
 
@@ -223,6 +226,7 @@ flowchart LR
 
 | 版本 | 日期 | 变更 |
 | ---- | ---- | ---- |
+| **1.5.1** | 2026-09-21 | **重验轮**。按「发现者不得复核自己」请独立 agent 复核 1.5.0 的新代码，它用可执行证据报出 5 条并全部修复：**META-2**（一条解析不了的注解会让该 finding **整条跳过全部逐条检查**，而 `validate` 仍打印 `PASS` —— 门禁退化成摆设，故定 P1）、**PATH-3**（路径围栏只报错不拦读，越界读出仓库外文件的行数）、**CMD-1**（`--commit=--output=…` 被当成 git 选项：写文件 + diff-filter 静默返回「0 个变更」）、**RES-1**（`LINES` 无位数上界，py3.11+ 抛异常把门禁搞崩、py3.9 二次方）、**META-3**（prose 声称 `validate` 会抓出「标记了 fixed 但改的是另一个文件」，实际只查 COMMIT 是不是 HEAD 祖先）。并**补完两处我自己重验时误判为「已修」的半修**：PATH-2（agent 的读取路径上没有任何包含性指令）、DEP-1（`security-fix-skill` 速查表仍写 `atexit` 清理 "even on crash paths" —— 该 finding 点名的是两个文件）。另：`check_skills.py` 悬空引用检测去盲区（改为只认反引号，即可覆盖 v1.4.3 声称修过、实际只改了 SVG 没改正文的 `code-review`）；修复 `export_diagram.py` 的 PNG 导出在 Windows 上**恒失败**（`shutil.which` 返回 `…rsvg-convert.EXE`，`endswith("rsvg-convert")` 为假 → 走成 magick 的 argv 形式）；工作流图按新流程重制、新增注解状态模型图 `verdict-model.svg`；README 里那段声称「Phase 4 只验证变更文件」的 stale Mermaid 换成实图。**本轮教训已入档**：只核对注解里那一个 `FILE`/`LINES` 会漏掉「同一句话在别处还有一份」，多文件 finding 必须逐个文件核 |
 | **1.5.0** | 2026-09-20 | 对标 `cloudflare/security-audit-skill` 的**轻量升级：只取认识论，不取工程学**（未采纳其 132 KB 的 `findings.json`+Schema+双校验器、覆盖率账本 JSON、11 步 artifact promotion、OS 沙箱前置）。①注解加 `VERDICT`（`confirmed` 缺省 / `needs-validation` / `rejected`）—— 认识态与修复态拆成两条正交轴，**不确定就不许定级**，`rejected` 留档以免下轮重打；缺省值保证旧报告零改动兼容。②`security_audit_tools.py validate` 七类契约检查接 CI；给"历史被重写"留唯一显式豁免 `**Provenance:** baseline-rewritten`。③`vulnerability-patterns.md` 加「不算 Finding 判别表」17 行 + 4 条全局规则，直击 30–40% 误报。④报告模板加必填 `## Coverage`、`## Needs Validation` 与「未重验」表。⑤Phase 2 独立性：发现者不得复核自己，Critical/High 换新 agent 回读源码。⑥Phase 4 修两个洞（修复落在别的文件时 `fixed` 认不出、静默沿用旧结论）。⑦新增 `attack-surfaces.md`（AI/供应链/桌面-IPC/资源耗尽/数据隔离，懒加载）与 Agent D（业务逻辑/功能滥用/链式信任边界/Wildcard）。**validate 上线当天在自身仓库抓出 3 个真 bug**：`SECRET-3` 因 `LINES=475,510` 被旧正则静默丢弃、报告 `FILE` 为子目录基准会让 diff-filter 静默漏判、`PATH-2` 行号随 SKILL.md 瘦身失效 |
 | **1.4.3** | 2026-09-12 | 工作流图用 diagram-design 重制（`audit-workflow.{html,svg,png}`），替换 v14 三件套：①修图里的**幽灵引用**——分流框原写"单 PR → code-review"，而 `code-review` 是全仓库不存在的技能，改为 `dev-workflow`；②补齐导出规范——旧 `.svg` 缺 `xmlns`，作为 `<img>` 嵌入时不会渲染，且 HTML/SVG 两件是孤儿；现在 HTML 为唯一图源、SVG/PNG 由它导出，README 只引用 SVG |
 | **1.4.2** | 2026-09-12 | 修复：`security-audit-tools` 控制台命令此前从未可用——文件名为连字符，无法作为 `security_audit_tools` 模块导入，导致 `pip install -e .` 整个失败。文件改名为 `bin/security_audit_tools.py`；README 补 monorepo-root 前置说明 |

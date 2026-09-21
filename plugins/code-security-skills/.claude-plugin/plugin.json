@@ -1,7 +1,7 @@
 {
   "name": "code-security-skills",
   "description": "Code security audit skills for Claude Code — systematic vulnerability assessment, security fix workflow, and re-audit verification",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "author": {
     "name": "Azzygoatcoder"
   },
