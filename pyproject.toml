@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,9 +8,11 @@ version = "1.5.1"
 description = "模块化 AI 科研/工程技能 monorepo（Claude Code / DeepSeek Harness 通用）"
 requires-python = ">=3.9"
 # 授权策略见 LICENSING.md（根 MIT 覆盖全仓库；plugins/* 各自另带一份）
-# 用经典 {text = ...} 形式以匹配 build-system 声明的 setuptools>=61 下限 ——
-# PEP 639 的 `license = "MIT"` 需要 setuptools>=77，等下限上移时再改。
-license = { text = "MIT" }
+# 用 PEP 639 的 SPDX 字符串 + license-files，而不是被弃用的 `{ text = ... }` 表：
+# 后者在 setuptools>=77 上每次构建都告警「deprecation is overdue … may become build errors」，
+# 而发版恰恰依赖这条构建链。setuptools 77 的 Requires-Python 仍是 >=3.9，故下限同步上移。
+license = "MIT"
+license-files = ["LICENSE"]
 
 [project.optional-dependencies]
 # 核心命令（review / vision / check-skills / latex-build 等）零第三方依赖；
