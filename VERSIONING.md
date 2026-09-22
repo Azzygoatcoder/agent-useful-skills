@@ -5,8 +5,19 @@ monorepo 两层版本，分开管。
 ## 根快照（pyproject.toml）
 
 - 用途：`pip install -e .`（bin 脚本）+ GitHub Release
-- bump 时机：发整仓 release 时（走 release-skill）
+- bump 时机：发整仓 release 时（走 `dev-workflow` 技能的 release 场景）
 - 语义：整仓在某个时间点的 coherent 快照，不代表「最新」
+- **发版方式：推 tag，由 CI 建 Release 并挂产物**
+
+  ```bash
+  git tag -a vX.Y.Z -m "vX.Y.Z — 一句话主题"
+  git push origin vX.Y.Z
+  ```
+
+  `.github/workflows/release.yml` 先复用 `verify.yml` 的全部门禁（不在红的提交上发版），
+  再 `python -m build` 产出 **sdist + wheel** 挂上去；notes 优先读 `release-notes/<tag>.md`。
+  **不要手跑 `gh release create`** —— 它会与 CI 的创建步骤抢跑，且**失败是静默的**（产物缺失但不报错）。
+  完整说明见根 README 的「发布」一节
 
 ## 插件独立（各 .claude-plugin/plugin.json）
 
@@ -29,4 +40,4 @@ monorepo 两层版本，分开管。
 
 ## 防失配
 
-改插件 skills 时，**同步**它的 README changelog + `plugin.json` version，别只改一个（code-security-skills 曾 plugin.json 1.3.1 vs changelog 1.4.0 失配）。release-skill 的 bump 步骤会提示检查。
+改插件 skills 时，**同步**它的 README changelog + `plugin.json` version，别只改一个（code-security-skills 曾 plugin.json 1.3.1 vs changelog 1.4.0 失配）。`dev-workflow` 技能的 release 场景会提示检查。

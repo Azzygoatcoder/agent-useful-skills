@@ -3,12 +3,17 @@ name: verify
 # 本仓库的门禁此前全靠手工跑；已经证明它们能抓真问题
 # （校验器抓过版本失配与配图漂移），所以固化成 CI。
 # 全部检查都是离线的：不调用任何 LLM/MCP 端点，不需要密钥。
+#
+# 同时以 workflow_call 暴露给 release.yml 复用 —— 发版前必须过同一套门禁。
+# 之所以复用而不是在 release.yml 里抄一份检查清单：抄一份的话，
+# 这里以后加了新门禁，发版那条路会**静默不跑**它。
 
 "on":
   push:
     branches: [master, main]
   pull_request:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read

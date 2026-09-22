@@ -23,6 +23,11 @@ __pycache__/
 *.pyc
 *.egg-info/
 
+# 打包产物（python -m build）。CI 由 release.yml 构建并挂到 Release；
+# 本地构建也会落在这些目录，不该进版本控制。
+build/
+dist/
+
 # Node / DSH plugin dev
 node_modules/
 package-lock.json

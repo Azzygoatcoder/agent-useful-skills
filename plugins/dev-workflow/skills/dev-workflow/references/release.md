@@ -36,6 +36,10 @@ ls .github/workflows/
 grep -l -e 'tags:' -e 'release' .github/workflows/*.yml
 ```
 
+> **本仓库（agent-useful-skills）就是「CI 自动」型**：`.github/workflows/release.yml` 由 tag 触发，
+> 先复用 `verify.yml` 的全部门禁，再构建 sdist + wheel 挂上去。
+> 所以在这里发版**只推 tag**，末了核对产物即可（见场景 A 第 5 步）。
+
 ### 手跑 + CI 抢跑会怎样：不报错，而是静默少产物
 
 两个机制**会抢跑**，典型后果**不是报错**：

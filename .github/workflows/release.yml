@@ -1,0 +1,114 @@
+name: release
+
+# 由 tag 触发：CI 创建 Release 并把 sdist / wheel 挂上去（历史上本仓库的 Release 全是 0 产物）。
+#
+# ⚠️ 两条硬规则，来自一次真实事故（详见
+# plugins/dev-workflow/skills/dev-workflow/references/release.md 的「发布机制」）：
+#
+#   ① 创建步骤**幂等** —— Release 已存在就跳过创建，不报错；
+#   ② 上传步骤**无条件** —— 绝不写成 `if: steps.create.outputs.upload_url`。
+#      那种写法一旦创建被跳过，上传会**一并跳过**，最终留下一个
+#      「有 notes、看着正常、却没有任何产物」的 Release，而且**不报错**。
+#
+# 推论：**不要手动 `gh release create`** —— 它与本工作流的创建步骤抢跑，
+# 结果就是这个静默失败。要发版就推 tag，让这里来做。
+
+"on":
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "已存在的 tag（如 v1.5.1）。用于补建 Release 或重挂产物。"
+        required: true
+        type: string
+
+permissions:
+  contents: write # 创建 Release + 上传产物
+
+env:
+  PYTHONIOENCODING: utf-8
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # 先过与 push / PR 完全相同的那套门禁 —— 不在红的提交上发版。
+  # 复用而不是抄一份：抄的话 verify.yml 以后加了新门禁，发版这条路会**静默不跑**它。
+  verify:
+    uses: ./.github/workflows/verify.yml
+
+  release:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 是必需的：`--generate-notes` 要读历史才能定位上一个 Release，
+      # 浅克隆会生成出残缺甚至空的 notes。
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: 解析并校验目标 tag
+        run: |
+          set -euo pipefail
+          TAG="${{ inputs.tag }}"
+          if [ -z "$TAG" ]; then TAG="${GITHUB_REF_NAME}"; fi
+          case "$TAG" in
+            v[0-9]*) ;;
+            *) echo "::error::tag 必须以 v 开头（得到 '$TAG'）"; exit 1 ;;
+          esac
+          if ! git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "::error::tag '$TAG' 不在本次 checkout 中"; exit 1
+          fi
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          echo "目标 tag = $TAG"
+
+      - name: 构建 sdist + wheel
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade build
+          python -m build
+          echo "--- 产物 ---"
+          ls -l dist/
+
+      # 规则①：幂等。Release 已存在不是错误 —— 直接跳过创建，交给下一步补产物。
+      - name: 创建 Release（幂等；已存在则跳过创建）
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG 已存在 —— 跳过创建；产物仍会在下一步上传（--clobber）"
+            exit 0
+          fi
+          NOTES="release-notes/${TAG}.md"
+          TITLE="$TAG"
+          if [ -f "$NOTES" ]; then
+            # 约定：notes 文件首行若是 H1，就用它当 Release 标题；否则标题用 tag 名。
+            FIRST="$(head -n 1 "$NOTES")"
+            case "$FIRST" in
+              "# "*) TITLE="${FIRST#\# }" ;;
+            esac
+            echo "用 $NOTES 作 notes，标题：$TITLE"
+            gh release create "$TAG" --title "$TITLE" --notes-file "$NOTES"
+          else
+            echo "无 release-notes/${TAG}.md —— 用 --generate-notes 自动生成"
+            gh release create "$TAG" --title "$TITLE" --generate-notes
+          fi
+
+      # 规则②：**无条件**执行，不挂在创建步骤的输出上。
+      # --clobber 让「Release 已存在、产物缺失」的补挂也能一把修好。
+      - name: 上传产物（无条件执行）
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release upload "$TAG" dist/* --clobber
+          echo "--- 上传后核对 ---"
+          gh release view "$TAG" --json assets -q '.assets[].name'

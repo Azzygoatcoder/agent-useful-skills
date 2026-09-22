@@ -194,6 +194,28 @@ pwsh bin/redeploy-skills.ps1 -Check            # 部署完整性（CI 先造 DSH
 > 该目录里我们自己的 skill（figure-drawing / paper-reading / paper-writing / office-tools）
 > 与沿用下来的那些，接受同样的检查与同样的改进。
 
+## 发布（`.github/workflows/release.yml`）
+
+**推 tag 即可，由 CI 建 Release 并挂产物 —— 不要手跑 `gh release create`。**
+
+```bash
+git tag -a vX.Y.Z -m "vX.Y.Z — 一句话主题"
+git push origin vX.Y.Z          # 到这里为止，剩下的交给 CI
+```
+
+`release.yml` 做三件事：① 复用 `verify.yml` 那一整套门禁（**不在红的提交上发版**）；
+② `python -m build` 产出 **sdist + wheel** 并挂到 Release；③ 若 `release-notes/<tag>.md` 存在就用它当 notes，
+否则 `--generate-notes`（约定见 [release-notes/](release-notes/)）。
+
+> **为什么必须由 CI 建**：手动 `gh release create` 会和 tag 触发的 workflow **抢跑**，
+> 而且**失败是静默的** —— workflow 的创建步骤看到 Release 已存在就跳过，连带把产物上传也跳过，
+> 留下一个「有 notes、看着正常、却没有任何产物」的 Release。
+> 本 workflow 因此把**创建写成幂等、上传写成无条件**。完整教训见
+> [dev-workflow 的 release.md](plugins/dev-workflow/skills/dev-workflow/references/release.md) 的「发布机制」一节。
+
+**发完必做**：核对产物 —— 与上一版对比 `gh release view <tag> --json assets`。
+缺产物不会报错，只能靠对比发现。
+
 ## 外部 skill 依赖（`skills.external.json`）
 
 有些能力引用了**不随本仓库分发**的第三方 skill（`diagram-design` / `fireworks-tech-graph` /
