@@ -55,6 +55,11 @@ gh repo view <owner>/<repo> --json defaultBranchRef -q .defaultBranchRef.name
 | **C. review** — 看 / 评审 / 合并 PR | "review 这个 PR"、"看下这个 PR"、"approve"、"要求修改"、"merge"、"合了" | [references/review.md](references/review.md) |
 | **D. release** — bump / tag / 发 Release | "release"、"发版本"、"发 rc"、"准备发 vX.Y.Z" | [references/release.md](references/release.md) |
 
+> ⚠️ **走 D 之前先确认「Release 由谁创建」**：仓库若有 **tag 触发**的 release workflow，
+> **只推 tag、不要手跑 `gh release create`** —— 两者抢跑不会报错，而是让 CI 的创建步骤跳过、
+> 连带把产物上传也跳过，最终留下一个 **有 notes 但没有产物**的 Release。
+> 判断方法与恢复步骤见 [references/release.md](references/release.md) 的「发布机制」一节。
+
 ## 链式交接（每个场景跑完该告诉用户下一步）
 
 ```
@@ -83,3 +88,4 @@ issue ──(需要改代码)──> pr ──(开好了)──> review ──(m
 | 2026-08-30 | 归档 meta skill 之后 | review-skill 补自带代码评审清单；description 重写做触发词卫生 |
 | 2026-09-12 | **四技能合并为一个** | issue/pr/review/release 本是同一条链，共享同一套 remote 约定与 push 权限判据，拆成四个同级技能只增加「我该调哪个」的决策成本与触发词重叠。合并为一个入口 + 四份 references，第 0 步共用判据只写一次。同步修掉合并前发现的跨技能矛盾（见下） |
 | 2026-09-12 | 合并前的 P1 修复（已并入本文件） | ①`origin` 在两个技能里定义相反 → 统一为 origin=你 clone 的那份/upstream=权威仓库，角色改用 `gh api .permissions.push` 判；②默认分支检测用 `git rev-parse --abbrev-ref HEAD`（返回当前分支）→ 改 `gh repo view --json defaultBranchRef`；③`reset --hard` 补 fetch 与未推送提交保护；④`--notes-file notes.md` 从未创建 → 补生成步骤；⑤「README 版本 badge」指向不存在的字符串 → 改为枚举真实位置；⑥bump 清单补全 package.json / VERSIONING.md / 根 README / 插件横幅 |
+| 2026-09-21 | 另一个项目的实战教训：**手跑 `gh release create` 与 tag 触发的 workflow 抢跑** | 原 release.md **无条件**教人手跑 `gh release create`，在「CI 自动发版」的仓库里照做就是错的。教训的关键在于**失败是静默的**：workflow 的创建步骤看到 Release 已存在 → 跳过（幂等本身没错），但上传产物那步挂在创建步骤的输出上（`if: steps.create.outputs.upload_url`）→ 一并跳过，最终留下一个**有 notes、看着正常、却没有任何产物**的 Release —— 只能靠对比上一版的 assets 才发现。吸收：①新增「发布机制：先确认由谁创建」一节（`grep -l 'tags:' .github/workflows/*.yml`），并把它列为通用准备里**必须最先做**的一步；②场景 A 第 4 步改为**按机制分叉**，新增第 5 步「核对产物（必做）」—— 与上一版对比 `gh release view --json assets`；③补恢复步骤：`gh release delete` **不会删 tag**，所以删掉手动那条重跑 workflow 即可，明确禁止用 `git push --delete` 弃 tag；④补一条给 workflow 作者的规则：创建步骤要幂等但不吞上传（`gh release upload --clobber`），别把上传挂在创建输出上；⑤Edge cases 补三条（产物比上版少默认按失败处理、tag 已推但 Release 没建要用 `gh workflow run` 补而不是手建） |
