@@ -1,0 +1,31 @@
+version: 2
+
+# 只配 github-actions —— 这是**刻意**的窄范围，别顺手加 npm/pip：
+#
+# - **npm 不加**：唯一的依赖是 `@deepseek-ai/dsh-skill-filesystem: ^0.1.1-rc.1`，
+#   是个 caret 范围，且**仓库里没有提交 lockfile**（`.gitignore` 明确忽略 `package-lock.json`，
+#   因为这些 node 依赖只服务于本地/CI 的插件校验，不是随包分发的东西）。
+#   范围本来就会浮动到最新兼容版，dependabot 再提一个「把下限调高」的 PR 近乎无意义。
+#
+# - **pip 不加**：`pyproject.toml` 里的 Python 依赖全是**可选 extras**（`office` / `plot`），
+#   且刻意用宽松的 `>=` 下限（"核心命令零第三方依赖"）—— CI 本身只用标准库。
+#   对着宽松下限提 bump PR 是纯噪音。
+#
+# github-actions 才是真有价值的一个：工作流按**大版本 tag** 固定（`actions/checkout@v7` 之类），
+# dependabot 会在上游发大版本时提 PR。改动前记得跑一遍 CI（配图同步、清单一致性这些门禁）。
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+    labels:
+      - dependencies
+    # 分组：一次 PR 覆盖全部 action 更新，而不是每个 action 开一条。
+    # 单人仓库里前者一天能看完，后者会积压。
+    groups:
+      github-actions:
+        patterns:
+          - "*"

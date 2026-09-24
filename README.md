@@ -270,3 +270,11 @@ export VISION_PROVIDER="sensenova"   # 自动带出 URL + 模型 + SENSENOVA_API
 
 > `latex-templates/` 是自写的最小骨架（ICML / NeurIPS 官方 `.sty` 刻意不 vendoring），
 > 不涉及 IEEE / ICML / NeurIPS / SJTU 的模板许可。
+
+## 贡献与安全
+
+- **改东西之前先读 [CONTRIBUTING.md](CONTRIBUTING.md)** —— 它是**索引不是复述**：
+  本仓库有若干 **CI 强制**的契约（技能目录单层、`description` ≤500、`## 自进化日志` 必备、
+  清单双向一致、HTML 唯一图源、两层版本号），不知道就会拿到一个看不懂的红 CI
+- **报安全问题走 [SECURITY.md](SECURITY.md)**，用 GitHub 的私密漏洞报告（仓库页 → Security → Report a vulnerability），
+  **不要**开公开 issue。注意范围：**你用本仓库的技能审出来的、别人项目里的漏洞，请报给那个项目**
